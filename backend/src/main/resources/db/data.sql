@@ -4,6 +4,9 @@
 
 USE campuspilot;
 
+-- 强制 UTF-8 导入，避免中文被二次编码成乱码
+SET NAMES utf8mb4;
+
 -- Insert demo users
 -- Password for all users: password
 -- BCrypt hash: $2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue

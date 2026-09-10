@@ -8,6 +8,9 @@ CREATE DATABASE IF NOT EXISTS campuspilot
 
 USE campuspilot;
 
+-- 强制 UTF-8 导入（docker-entrypoint mysql 客户端默认 latin1，会把中文二次编码成乱码）
+SET NAMES utf8mb4;
+
 -- Drop tables if they exist (for development)
 DROP TABLE IF EXISTS tool_execution_logs;
 DROP TABLE IF EXISTS agent_execution_logs;

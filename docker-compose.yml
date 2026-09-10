@@ -36,10 +36,15 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=root
       - JWT_SECRET=${JWT_SECRET:-campuspilot-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256}
-      - AGENT_PROVIDER=mock
+      - AGENT_PROVIDER=${AGENT_PROVIDER:-mock}
+      - AGENT_RAG_PROVIDER=${AGENT_RAG_PROVIDER:-vector}
+      - KNOWLEDGE_DIR=${KNOWLEDGE_DIR:-/app/knowledge}
+      - TZ=Asia/Shanghai
     depends_on:
       mysql:
         condition: service_healthy
+    volumes:
+      - ./knowledge:/app/knowledge:ro
     networks:
       - campuspilot-network
     restart: unless-stopped

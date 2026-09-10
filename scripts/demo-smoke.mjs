@@ -61,7 +61,14 @@ async function main() {
   const d4 = await req('/api/notifications', { headers: auth });
   const baseline = new Set((d4.data || []).map((n) => String(n.relatedId) + ':' + n.type));
 
-  const past = new Date(Date.now() - 90 * 1000);
+  const hRes = await req('/api/health');
+  const serverTs = hRes.data && hRes.data.timestamp ? String(hRes.data.timestamp).trim() : '';
+  let past = new Date(Date.now() - 90 * 1000);
+  const m = serverTs.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+  if (m) {
+    past = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    past.setSeconds(past.getSeconds() - 90);
+  }
   const pad = (n) => String(n).padStart(2, '0');
   const deadline = `${past.getFullYear()}-${pad(past.getMonth() + 1)}-${pad(past.getDate())} ${pad(past.getHours())}:${pad(past.getMinutes())}:${pad(past.getSeconds())}`;
   const created = await req('/api/tasks', { method: 'POST', headers: auth, body: {

@@ -24,3 +24,5 @@ frontend/dist/
 
 # Test reports
 backend/target/surefire-reports/
+# Local docker test override
+docker-compose.override.local.yml
