@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: campuspilot-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: campuspilot
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - campuspilot-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: campuspilot-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=campuspilot
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - JWT_SECRET=${JWT_SECRET:-campuspilot-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256}
+      - AGENT_PROVIDER=mock
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - campuspilot-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: campuspilot-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - campuspilot-network
+    restart: unless-stopped
+
+networks:
+  campuspilot-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

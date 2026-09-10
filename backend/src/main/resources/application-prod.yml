@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:campuspilot}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+
+logging:
+  level:
+    root: INFO
+    com.campuspilot: INFO
+    org.springframework.security: WARN
+
+agent:
+  provider: ${AGENT_PROVIDER:fastgpt}
+  fastgpt:
+    url: ${FASTGPT_URL:}
+    apiKey: ${FASTGPT_API_KEY:}
+    knowledgeId: ${FASTGPT_KNOWLEDGE_ID:}
+    workflowId:
+      policyConsultation: ${FASTGPT_WORKFLOW_POLICY:}
+      eligibilityCheck: ${FASTGPT_WORKFLOW_ELIGIBILITY:}
+      taskCreation: ${FASTGPT_WORKFLOW_TASK:}
+    timeout: 30000
+    retryCount: 3
