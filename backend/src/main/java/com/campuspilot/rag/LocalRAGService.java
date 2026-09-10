@@ -7,25 +7,31 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * RAG 服务默认实现(本地)
- * 默认使用 KeywordPolicyRetriever；可通过 agent.rag.provider=fastgpt 切换。
+ * 可选提供方：
+ * - local  ：关键词检索 (KeywordPolicyRetriever)
+ * - vector ：本地向量检索 (VectorPolicyRetriever, TF-IDF + 内存向量库)
+ * - fastgpt：FastGPT 知识库(待环境)
  */
 @Slf4j
 @Service
 public class LocalRAGService implements RAGService {
 
     private final KeywordPolicyRetriever keywordRetriever;
+    private final VectorPolicyRetriever vectorRetriever;
     private final FastGptPolicyRetriever fastGptRetriever;
 
     @Value("${agent.rag.provider:local}")
     private String provider;
 
-    public LocalRAGService(KeywordPolicyRetriever keywordRetriever, FastGptPolicyRetriever fastGptRetriever) {
+    public LocalRAGService(KeywordPolicyRetriever keywordRetriever,
+                           VectorPolicyRetriever vectorRetriever,
+                           FastGptPolicyRetriever fastGptRetriever) {
         this.keywordRetriever = keywordRetriever;
+        this.vectorRetriever = vectorRetriever;
         this.fastGptRetriever = fastGptRetriever;
     }
 
@@ -65,10 +71,16 @@ public class LocalRAGService implements RAGService {
         if ("fastgpt".equalsIgnoreCase(provider)) {
             return "WAITING_FOR_FASTGPT_ENVIRONMENT";
         }
+        if ("vector".equalsIgnoreCase(provider)) {
+            return "LOCAL_VECTOR_TFIDF";
+        }
         return "LOCAL_KEYWORD";
     }
 
     private PolicyRetriever resolveRetriever() {
+        if ("vector".equalsIgnoreCase(provider)) {
+            return vectorRetriever;
+        }
         if ("fastgpt".equalsIgnoreCase(provider)) {
             return fastGptRetriever;
         }

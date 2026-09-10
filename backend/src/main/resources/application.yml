@@ -40,7 +40,8 @@ jwt:
 agent:
   provider: ${AGENT_PROVIDER:mock}
   rag:
-    provider: ${AGENT_RAG_PROVIDER:local}
+    provider: ${AGENT_RAG_PROVIDER:vector}
+    knowledgeDir: ${KNOWLEDGE_DIR:../knowledge}
   fastgpt:
     url: ${FASTGPT_URL:http://localhost:3000}
     apiKey: ${FASTGPT_API_KEY:}
