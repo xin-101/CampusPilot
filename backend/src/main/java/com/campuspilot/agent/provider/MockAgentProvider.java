@@ -9,7 +9,6 @@ import com.campuspilot.workflow.WorkflowEngine;
 import com.campuspilot.workflow.WorkflowResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,7 +23,6 @@ import java.util.UUID;
  * - SCORE_QUERY / GENERAL_QUERY -> 演示回退
  */
 @Service
-@Profile("dev")
 @RequiredArgsConstructor
 @Slf4j
 public class MockAgentProvider implements AgentProvider {

@@ -53,6 +53,16 @@ agent:
     timeout: 30000
     retryCount: 3
 
+campuspilot:
+  llm:
+    enabled: ${LLM_ENABLED:false}
+    baseUrl: ${LLM_BASE_URL:}
+    apiKey: ${LLM_API_KEY:}
+    model: ${LLM_MODEL:gpt-4o}
+    temperature: ${LLM_TEMPERATURE:0.2}
+    timeoutMs: ${LLM_TIMEOUT_MS:30000}
+    fallbackToMock: ${LLM_FALLBACK_TO_MOCK:false}
+
 logging:
   level:
     root: INFO

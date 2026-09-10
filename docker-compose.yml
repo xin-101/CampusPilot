@@ -40,6 +40,13 @@ services:
       - AGENT_RAG_PROVIDER=${AGENT_RAG_PROVIDER:-vector}
       - KNOWLEDGE_DIR=${KNOWLEDGE_DIR:-/app/knowledge}
       - TZ=Asia/Shanghai
+      - LLM_ENABLED=${LLM_ENABLED:-false}
+      - LLM_BASE_URL=${LLM_BASE_URL:-}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.2}
+      - LLM_TIMEOUT_MS=${LLM_TIMEOUT_MS:-30000}
+      - LLM_FALLBACK_TO_MOCK=${LLM_FALLBACK_TO_MOCK:-false}
     depends_on:
       mysql:
         condition: service_healthy

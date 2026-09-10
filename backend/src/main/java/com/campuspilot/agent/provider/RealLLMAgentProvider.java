@@ -10,6 +10,7 @@ import com.campuspilot.workflow.WorkflowEngine;
 import com.campuspilot.workflow.WorkflowResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,7 @@ import java.util.regex.Pattern;
  */
 @Service
 @Lazy
+@ConditionalOnProperty(prefix = "campuspilot.llm", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class RealLLMAgentProvider implements AgentProvider {
