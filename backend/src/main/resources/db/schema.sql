@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS policy_materials;
 DROP TABLE IF EXISTS policy_conditions;
 DROP TABLE IF EXISTS policy_versions;
 DROP TABLE IF EXISTS policies;
+DROP TABLE IF EXISTS eligibility_rules;
 DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS users;
 
@@ -81,6 +82,7 @@ CREATE TABLE policies (
     category VARCHAR(50) NOT NULL COMMENT '政策分类: SCHOLARSHIP/AID/LEAVE/EXAMINATION/DORMITORY/CERTIFICATE',
     department VARCHAR(100) COMMENT '发布部门',
     description TEXT COMMENT '政策描述',
+    keywords VARCHAR(255) COMMENT '关键词(逗号分隔)，用于本地关键词检索',
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT '状态: ACTIVE/INACTIVE',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -100,6 +102,7 @@ CREATE TABLE policy_versions (
     policy_id BIGINT NOT NULL COMMENT '政策ID',
     version VARCHAR(20) NOT NULL COMMENT '版本号: v1/v2/v3',
     content TEXT NOT NULL COMMENT '政策内容',
+    keywords VARCHAR(255) COMMENT '关键词(逗号分隔)，用于本地关键词检索',
     effective_date DATE NOT NULL COMMENT '生效日期',
     expiry_date DATE COMMENT '失效日期',
     source VARCHAR(200) COMMENT '来源',
@@ -174,7 +177,10 @@ CREATE TABLE tasks (
     description TEXT COMMENT '任务描述',
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT '任务状态: PENDING/IN_PROGRESS/COMPLETED/CANCELLED',
     priority VARCHAR(20) NOT NULL DEFAULT 'NORMAL' COMMENT '优先级: LOW/NORMAL/HIGH/URGENT',
-    deadline DATETIME COMMENT '截止时间',
+    deadline DATETIME COMMENT '截止时间(与due_at一致，作为过期提醒依据)',
+    due_at DATETIME COMMENT '截止/到期时间',
+    remind_at DATETIME COMMENT '提醒时间(到点发送提醒通知)',
+    reminder_sent TINYINT(1) NOT NULL DEFAULT 0 COMMENT '提醒是否已发送: 0-未发送 1-已发送(幂等)',
     completed_at DATETIME COMMENT '完成时间',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -360,3 +366,31 @@ CREATE TABLE tool_execution_logs (
     
     FOREIGN KEY (execution_log_id) REFERENCES agent_execution_logs(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='工具执行日志表';
+
+-- Create eligibility_rules table (资格规则引擎)
+DROP TABLE IF EXISTS eligibility_rules;
+CREATE TABLE eligibility_rules (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '规则ID',
+    rule_id VARCHAR(50) NOT NULL COMMENT '业务规则编码',
+    name VARCHAR(100) NOT NULL COMMENT '规则名称',
+    category VARCHAR(50) NOT NULL COMMENT '政策分类: SCHOLARSHIP/AID/LEAVE/EXAMINATION/DORMITORY/CERTIFICATE',
+    field_name VARCHAR(50) NOT NULL COMMENT '学生字段: GRADE/GPA/RANK/STATUS/HARDSHIP',
+    operator VARCHAR(20) NOT NULL COMMENT '运算符: EQ/GT/GTE/LT/LTE/IN/CONTAINS',
+    expected_value VARCHAR(100) NOT NULL COMMENT '期望值',
+    weight INT NOT NULL DEFAULT 10 COMMENT '规则权重',
+    required TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否必选: 0-可选 1-必选',
+    description TEXT COMMENT '规则说明',
+    enabled TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否启用: 0-禁用 1-启用',
+    version VARCHAR(20) NOT NULL DEFAULT 'v1' COMMENT '规则版本',
+    source_policy_id BIGINT COMMENT '来源政策ID',
+    is_demo TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否演示规则: 1-演示 0-正式',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '软删除: 0-未删除 1-已删除',
+    
+    UNIQUE KEY uk_rule_id (rule_id),
+    INDEX idx_category (category),
+    INDEX idx_field_name (field_name),
+    INDEX idx_enabled (enabled),
+    INDEX idx_is_deleted (is_deleted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='资格规则表(演示规则)';
