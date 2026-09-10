@@ -181,7 +181,63 @@ public class MockAgentProvider implements AgentProvider {
             .toolCalls(result.getToolCalls())
             .executionTrace(executionTrace)
             .data(result.getData())
+            .actions(buildActions(result))
             .build();
+    }
+
+    /**
+     * 根据工作流结果确定性生成"下一步行动"，前端据此渲染按钮。
+     */
+    private List<AgentAction> buildActions(WorkflowResult result) {
+        List<AgentAction> actions = new ArrayList<>();
+        String workflowId = result.getWorkflowId();
+        RetrievalResult retrieval = result.getRetrieval();
+
+        Long policyId = null;
+        String policyName = null;
+        if (retrieval != null && !retrieval.isEmpty() && retrieval.getDocuments().get(0) != null) {
+            policyId = retrieval.getDocuments().get(0).getPolicyId();
+            policyName = retrieval.getDocuments().get(0).getPolicyName();
+        }
+
+        if ("policy_consultation".equals(workflowId)) {
+            actions.add(AgentAction.builder()
+                .type("VIEW_POLICY")
+                .label("查看政策")
+                .params(policyId != null ? Map.of("policyId", policyId, "policyName", policyName) : Map.of())
+                .build());
+        } else if ("eligibility_check".equals(workflowId)) {
+            actions.add(AgentAction.builder()
+                .type("VIEW_POLICY")
+                .label("查看政策")
+                .params(policyId != null ? Map.of("policyId", policyId, "policyName", policyName) : Map.of())
+                .build());
+            if (result.getEligibility() != null
+                && "ELIGIBLE".equals(result.getEligibility().getStatus())) {
+                actions.add(AgentAction.builder()
+                    .type("CREATE_TASK")
+                    .label("创建申请任务")
+                    .params(Map.of("policyId", policyId, "policyName", policyName))
+                    .build());
+            }
+        } else if ("task_creation".equals(workflowId)) {
+            Map<String, Object> data = result.getData() != null ? result.getData() : Map.of();
+            if (Boolean.TRUE.equals(data.get("taskCreated"))) {
+                Object taskId = data.get("taskId");
+                actions.add(AgentAction.builder()
+                    .type("VIEW_TASKS")
+                    .label("查看任务")
+                    .params(taskId != null ? Map.of("taskId", taskId) : Map.of())
+                    .build());
+            } else {
+                actions.add(AgentAction.builder()
+                    .type("VIEW_POLICY")
+                    .label("查看政策")
+                    .params(policyId != null ? Map.of("policyId", policyId, "policyName", policyName) : Map.of())
+                    .build());
+            }
+        }
+        return actions;
     }
 
     private void simulateDelay() {
@@ -248,9 +304,12 @@ public class MockAgentProvider implements AgentProvider {
 
     /**
      * 意图识别（优先级：资格判断 > 任务创建 > 成绩 > 政策 > 通用）
+     * 资格类：判断/资格/是否符合 + 能不能/能否/可否/可以申请/能申请（询问资格，非办理）
      */
     private String mockIntentDetection(String message) {
         if (message.contains("判断") || message.contains("资格") || message.contains("是否符合")
+                || message.contains("能不能") || message.contains("能否") || message.contains("可否")
+                || message.contains("可以申请") || message.contains("能申请")
                 || (message.contains("条件") && (message.contains("符合") || message.contains("满足")))) {
             return "ELIGIBILITY_CHECK";
         } else if (message.contains("帮我") || message.contains("办理") || message.contains("申请")) {

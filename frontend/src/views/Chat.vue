@@ -1,14 +1,20 @@
-<template>
+﻿<template>
   <div class="chat-container">
     <div class="chat-main">
       <div class="chat-header">
-        <h3>智能助手</h3>
-        <el-tag type="info" size="small">DEMO MODE</el-tag>
+        <div class="chat-title">
+          <h3>CampusPilot</h3>
+          <span class="chat-subtitle">高校校园学生事务智能体</span>
+        </div>
+        <div class="chat-header-tags">
+          <el-tag type="warning" size="small" effect="plain">DEMO DATA</el-tag>
+          <el-tag type="info" size="small">RAG · RuleEngine · Workflow · Trace</el-tag>
+        </div>
       </div>
-      
+
       <div class="messages-container" ref="messagesContainer">
-        <div 
-          v-for="message in messages" 
+        <div
+          v-for="message in messages"
           :key="message.id"
           :class="['message', message.role]"
         >
@@ -17,65 +23,151 @@
             <el-icon v-else :size="20"><Monitor /></el-icon>
           </div>
           <div class="message-content">
+            <div class="message-meta" v-if="message.role === 'assistant' && message.intent">
+              <el-tag size="small" type="primary" effect="plain">{{ intentLabel(message.intent) }}</el-tag>
+              <el-tag v-if="message.complexity" size="small" type="info" effect="plain">{{ message.complexity }}</el-tag>
+            </div>
+
             <div class="message-text" v-html="formatMessage(message.content)"></div>
-            <div v-if="message.sources && message.sources.length > 0" class="message-sources">
-              <el-divider content-position="left">引用来源</el-divider>
+
+            <!-- 来源引用卡片 -->
+            <el-card
+              v-if="message.sources && message.sources.length > 0"
+              class="sources-card"
+              shadow="never"
+            >
+              <template #header>
+                <div class="sources-card-header">
+                  <span>回答依据</span>
+                  <span class="sources-count">{{ message.sources.length }} 个来源</span>
+                </div>
+              </template>
               <div v-for="source in message.sources" :key="source.policyId" class="source-item">
-                <el-tag size="small" type="info">{{ source.version }}</el-tag>
-                <span class="source-name">{{ source.policyName }}</span>
-                <span class="source-relevance">相关度: {{ (source.relevance * 100).toFixed(0) }}%</span>
+                <div class="source-line">
+                  <el-icon color="#409eff"><Document /></el-icon>
+                  <span class="source-name">{{ source.policyName }}</span>
+                  <el-tag size="small" type="info">版本 {{ source.version || 'v1' }}</el-tag>
+                  <el-tag size="small" :type="isExpired(source) ? 'danger' : 'success'">
+                    {{ isExpired(source) ? '已过期' : '有效' }}
+                  </el-tag>
+                </div>
+                <div class="source-sub">
+                  <span>来源：{{ source.source || '学生资助相关政策' }}</span>
+                  <span v-if="source.effectiveDate && source.expiryDate">
+                    有效期：{{ source.effectiveDate }} ~ {{ source.expiryDate }}
+                  </span>
+                  <span v-if="source.relevance">相关度：{{ (source.relevance * 100).toFixed(0) }}%</span>
+                  <span v-else>来源链接：暂无（不伪造 URL）</span>
+                </div>
+              </div>
+            </el-card>
+
+            <!-- 下一步行动 -->
+            <div v-if="message.actions && message.actions.length > 0" class="actions-card">
+              <div class="actions-title">建议下一步</div>
+              <div class="actions-row">
+                <el-button
+                  v-for="action in message.actions"
+                  :key="action.type"
+                  type="primary"
+                  size="small"
+                  round
+                  :plain="action.type !== 'CREATE_TASK'"
+                  @click="handleAction(action)"
+                >
+                  <el-icon v-if="action.type === 'CREATE_TASK'" style="margin-right:4px"><Plus /></el-icon>
+                  {{ action.label }}
+                </el-button>
               </div>
             </div>
-            <details v-if="message.trace || (message.executionSteps && message.executionSteps.length > 0)" class="execution-trace">
-              <summary class="execution-trace-summary">
-                <span>执行轨迹</span>
-                <span v-if="message.trace && message.trace.workflowName" class="trace-workflow">
-                  {{ message.trace.workflowName }}
-                </span>
-                <span v-if="message.trace && message.trace.retrieval" class="trace-meta">
-                  {{ message.trace.retrieval.provider }} · {{ message.trace.retrieval.documents?.length || 0 }} hits
-                </span>
-                <span v-else class="trace-meta">fallback</span>
-              </summary>
-              <div class="trace-body">
-                <div v-if="message.trace && message.trace.decisions && Object.keys(message.trace.decisions).length" class="trace-decisions">
+
+            <!-- 执行轨迹 -->
+            <el-collapse v-if="message.trace" class="trace-collapse">
+              <el-collapse-item name="trace">
+                <template #title>
+                  <div class="trace-summary">
+                    <el-icon class="trace-icon"><Odometer /></el-icon>
+                    <span class="trace-title">Agent 执行过程</span>
+                    <el-tag v-if="message.trace.workflowName" size="small" type="primary">
+                      {{ message.trace.workflowName }}
+                    </el-tag>
+                    <el-tag v-else size="small" type="danger">{{ message.trace.workflowId || message.trace.intent }}</el-tag>
+                    <el-tag size="small" :type="traceStatusType(message.trace.status)">{{ message.trace.status }}</el-tag>
+                    <span class="trace-meta">
+                      {{ message.trace.retrieval?.provider || '—' }} ·
+                      {{ message.trace.retrieval?.documents?.length || 0 }} hits ·
+                      {{ message.trace.duration || 0 }}ms
+                    </span>
+                  </div>
+                </template>
+
+                <!-- 步骤总览 -->
+                <template v-if="tracePhases(message.executionSteps || []).length">
+                  <el-steps :active="stepIndex(message.executionSteps || [])" align-center class="trace-steps">
+                    <el-step
+                      v-for="phase in tracePhases(message.executionSteps || [])"
+                      :key="phase"
+                      :title="phase"
+                      :status="phaseStatus(phase, message.executionSteps || [])"
+                    />
+                  </el-steps>
+                </template>
+
+                <!-- 决策信息 -->
+                <el-card v-if="message.trace.decisions && Object.keys(message.trace.decisions).length" shadow="never" class="decision-card">
                   <div class="trace-section-title">决策信息</div>
-                  <pre class="trace-json">{{ jsonPretty(message.trace.decisions) }}</pre>
-                </div>
-                <el-timeline>
+                  <div class="decision-grid">
+                    <div v-for="(v, k) in message.trace.decisions" :key="k" class="decision-cell">
+                      <span class="decision-key">{{ k }}</span>
+                      <el-tag
+                        v-if="typeof v === 'boolean'"
+                        size="small"
+                        :type="v ? 'success' : 'danger'"
+                      >{{ v ? 'true' : 'false' }}</el-tag>
+                      <span v-else class="decision-value">{{ v }}</span>
+                    </div>
+                  </div>
+                  <el-button size="small" text type="primary" @click="traceDecisionsJson[message.id] = !traceDecisionsJson[message.id]">
+                    {{ traceDecisionsJson[message.id] ? '收起 JSON' : '查看 JSON' }}
+                  </el-button>
+                  <pre v-if="traceDecisionsJson[message.id]" class="trace-json">{{ jsonPretty(message.trace.decisions) }}</pre>
+                </el-card>
+
+                <div class="trace-section-title">执行步骤</div>
+                <el-timeline class="trace-timeline">
                   <el-timeline-item
-                    v-for="step in message.executionSteps"
+                    v-for="step in message.executionSteps || []"
                     :key="step.step"
-                    :type="step.type === 'TOOL' || step.type === 'RETRIEVAL' ? 'primary' : step.status === 'FAILED' ? 'danger' : 'success'"
-                    :hollow="step.type !== 'TOOL' && step.type !== 'RETRIEVAL'"
+                    :type="stepTimelineType(step)"
+                    :hollow="['ROUTER','INTENT','RESPONSE','DECISION'].includes(step.type)"
                   >
                     <div class="step-header">
-                      <span class="step-type">{{ step.type }}</span>
+                      <el-tag size="small" :type="stepTagType(step)" effect="plain">{{ step.type }}</el-tag>
                       <span class="step-name">{{ step.name }}</span>
-                      <el-tag size="small" :type="step.status === 'SUCCESS' ? 'success' : step.status === 'FAILED' ? 'danger' : 'warning'">
-                        {{ step.status }}
-                      </el-tag>
+                      <el-tag size="small" :type="stepStatusType(step.status)">{{ step.status }}</el-tag>
                       <span class="step-duration">{{ step.duration }}ms</span>
                     </div>
                     <div v-if="step.error" class="step-error">{{ step.error }}</div>
-                    <details v-if="step.input !== undefined || step.output !== undefined" class="step-details">
-                      <summary>输入/输出</summary>
-                      <div v-if="step.input !== undefined" class="step-io">
-                        <span class="trace-section-title">输入</span>
-                        <pre class="trace-json">{{ jsonPretty(step.input) }}</pre>
-                      </div>
-                      <div v-if="step.output !== undefined" class="step-io">
-                        <span class="trace-section-title">输出</span>
-                        <pre class="trace-json">{{ jsonPretty(step.output) }}</pre>
-                      </div>
-                    </details>
+                    <el-collapse v-if="step.input !== undefined || step.output !== undefined" class="step-details-collapse">
+                      <el-collapse-item name="io">
+                        <template #title><span class="step-details-title">输入 / 输出</span></template>
+                        <div v-if="step.input !== undefined" class="step-io">
+                          <div class="trace-section-title">输入</div>
+                          <pre class="trace-json">{{ jsonPretty(step.input) }}</pre>
+                        </div>
+                        <div v-if="step.output !== undefined" class="step-io">
+                          <div class="trace-section-title">输出</div>
+                          <pre class="trace-json">{{ jsonPretty(step.output) }}</pre>
+                        </div>
+                      </el-collapse-item>
+                    </el-collapse>
                   </el-timeline-item>
                 </el-timeline>
-              </div>
-            </details>
+              </el-collapse-item>
+            </el-collapse>
           </div>
         </div>
-        
+
         <div v-if="loading" class="message assistant">
           <div class="message-avatar">
             <el-icon :size="20"><Monitor /></el-icon>
@@ -86,21 +178,22 @@
               <span></span>
               <span></span>
             </div>
+            <div class="thinking-text">正在分析你的问题…（意图识别 → 政策检索 → 工具调用 → 规则判断）</div>
           </div>
         </div>
       </div>
-      
+
       <div class="input-container">
         <el-input
           v-model="inputMessage"
-          placeholder="输入你的问题..."
+          placeholder="输入你的问题，例如：我能不能申请国家奖学金？"
           @keyup.enter="sendMessage"
           :disabled="loading"
           size="large"
         >
           <template #append>
-            <el-button 
-              type="primary" 
+            <el-button
+              type="primary"
               @click="sendMessage"
               :loading="loading"
             >
@@ -110,12 +203,12 @@
         </el-input>
       </div>
     </div>
-    
+
     <div class="chat-sidebar">
       <div class="sidebar-section">
         <h4>快捷操作</h4>
-        <el-button 
-          v-for="action in quickActions" 
+        <el-button
+          v-for="action in quickActions"
           :key="action.text"
           @click="quickAction(action.text)"
           class="quick-action-btn"
@@ -123,7 +216,7 @@
           {{ action.icon }} {{ action.text }}
         </el-button>
       </div>
-      
+
       <div class="sidebar-section">
         <h4>最近任务</h4>
         <div v-if="recentTasks.length === 0" class="empty-tasks">
@@ -137,14 +230,23 @@
             <span class="task-title">{{ task.title }}</span>
           </div>
         </div>
+        <el-button v-if="recentTasks.length" size="small" text type="primary" @click="router.push('/tasks')">
+          查看全部任务 →
+        </el-button>
+      </div>
+
+      <div class="sidebar-section sidebar-note">
+        <h4>演示说明</h4>
+        <p class="note-text">资格判断与政策数据均为 DEMO 演示数据（规则引擎确定性计算），不代表真实校规审核结果。FastGPT 接入状态：WAITING_FOR_FASTGPT_ENVIRONMENT。</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
-import { sendMessage as sendAgentMessage, type AgentMessage, type AgentResponse } from '../api/agent'
+import { ref, onMounted, nextTick, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { sendMessage as sendAgentMessage, type AgentMessage, type AgentResponse, type AgentAction } from '../api/agent'
 import { getTasks, type Task } from '../api/task'
 import { ElMessage } from 'element-plus'
 
@@ -155,30 +257,39 @@ interface Message {
   sources?: any[]
   executionSteps?: any[]
   trace?: any
+  actions?: AgentAction[]
+  intent?: string
+  complexity?: string
 }
 
+const router = useRouter()
 const messages = ref<Message[]>([])
 const inputMessage = ref('')
 const loading = ref(false)
 const messagesContainer = ref()
 const recentTasks = ref<Task[]>([])
+const traceDecisionsJson = reactive<Record<string, boolean>>({})
 
 const quickActions = [
-  { icon: '🎓', text: '帮我判断是否符合国家奖学金申请条件' },
-  { icon: '📝', text: '查询请假政策' },
-  { icon: '📊', text: '查看我的成绩' },
-  { icon: '🏠', text: '宿舍报修流程' }
+  { icon: '🎓', text: '我能不能申请国家奖学金？' },
+  { icon: '📝', text: '那帮我申请国家奖学金' },
+  { icon: '📚', text: '国家奖学金什么时候申请？' },
+  { icon: '📊', text: '查看我的成绩' }
 ]
 
 onMounted(async () => {
-  // 初始欢迎消息
   messages.value.push({
     id: 'welcome',
     role: 'assistant',
-    content: '你好！我是CampusPilot校园事务智能助手。\n\n我可以帮你：\n- 📚 查询校园政策\n- 🎓 判断申请资格\n- 📝 办理校园事务\n- ⏰ 设置提醒通知\n\n请问有什么可以帮你的？'
+    content: '你好！我是 CampusPilot 校园事务智能助手。\n\n' +
+      '我可以帮你完成从「问得到」到「办得到」的全流程：\n' +
+      '- 📚 查询校园政策（带来源引用与有效期）\n' +
+      '- 🎓 判断申请资格（规则引擎确定性计算）\n' +
+      '- 📝 办理申请任务（真实写入数据库并通知）\n' +
+      '- 🔒 守护你的数据安全（越权/注入拦截）\n\n' +
+      '试试对我说：「我能不能申请国家奖学金？」'
   })
-  
-  // 加载最近任务
+
   try {
     const response = await getTasks()
     recentTasks.value = response.data.slice(0, 5)
@@ -189,40 +300,44 @@ onMounted(async () => {
 
 async function sendMessage() {
   if (!inputMessage.value.trim() || loading.value) return
-  
+
   const userMessage: Message = {
     id: Date.now().toString(),
     role: 'user',
     content: inputMessage.value
   }
-  
+
   messages.value.push(userMessage)
   inputMessage.value = ''
   loading.value = true
-  
+
   await nextTick()
   scrollToBottom()
-  
+
   try {
     const request: AgentMessage = {
       message: userMessage.content
     }
-    
+
     const response = await sendAgentMessage(request) as any
     const agentResponse: AgentResponse = response.data
-    
+
     const assistantMessage: Message = {
       id: agentResponse.messageId,
       role: 'assistant',
       content: agentResponse.response,
       sources: agentResponse.sources,
-      executionSteps: agentResponse.executionSteps,
-      trace: agentResponse.executionTrace
+      executionSteps: agentResponse.executionSteps || agentResponse.executionTrace?.steps || [],
+      trace: agentResponse.executionTrace,
+      actions: agentResponse.actions,
+      intent: agentResponse.intent,
+      complexity: agentResponse.complexity
     }
-    
+
     messages.value.push(assistantMessage)
   } catch (error: any) {
-    ElMessage.error('发送消息失败: ' + (error.message || '未知错误'))
+    ElMessage.error('发送消息失败，请稍后重试。')
+    console.error('Agent请求异常:', error)
   } finally {
     loading.value = false
     await nextTick()
@@ -235,13 +350,105 @@ function quickAction(text: string) {
   sendMessage()
 }
 
+function handleAction(action: AgentAction) {
+  if (action.type === 'CREATE_TASK') {
+    const policyName = action.params?.policyName
+    inputMessage.value = policyName ? `帮我申请${policyName}` : '帮我申请奖学金'
+    sendMessage()
+  } else if (action.type === 'VIEW_POLICY') {
+    const policyId = action.params?.policyId
+    router.push({ path: '/policies', query: policyId ? { policyId: String(policyId) } : {} })
+  } else if (action.type === 'VIEW_TASKS') {
+    router.push('/tasks')
+  }
+}
+
 function formatMessage(content: string): string {
-  // 简单的Markdown格式化
   return content
     .replace(/\n/g, '<br>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/^(\d+)\. /gm, '<span class="list-num">$1.</span> ')
+}
+
+function isExpired(source: any): boolean {
+  return !!(source.expiryDate && new Date(source.expiryDate) < new Date())
+}
+
+function intentLabel(intent: string): string {
+  const map: Record<string, string> = {
+    POLICY_QUERY: '政策咨询',
+    ELIGIBILITY_CHECK: '资格判断',
+    TASK_CREATE: '事务办理',
+    SCORE_QUERY: '成绩查询',
+    GENERAL_QUERY: '通用咨询',
+    DENIED: '已拦截'
+  }
+  return map[intent] || intent
+}
+
+function traceStatusType(status: string): any {
+  return status === 'SUCCESS' ? 'success' : status === 'DENIED' || status === 'FAILED' ? 'danger' : 'warning'
+}
+
+function stepIndex(steps: any[]): number {
+  return steps ? steps.length : 0
+}
+
+function tracePhases(steps: any[]): string[] {
+  if (!steps || !steps.length) return []
+  const phases: string[] = []
+  const typeToPhase: Record<string, string> = {
+    ROUTER: '意图路由',
+    INTENT: '意图识别',
+    RETRIEVAL: '知识检索',
+    TOOL: '工具调用',
+    DECISION: '规则判断',
+    NOTIFY: '发送通知',
+    RESPONSE: '生成结果'
+  }
+  for (const s of steps) {
+    const p = typeToPhase[s.type] || s.type
+    if (!phases.includes(p)) phases.push(p)
+  }
+  return phases.slice(0, 8)
+}
+
+function phaseStatus(phase: string, steps: any[]): any {
+  const typeToPhase: Record<string, string> = {
+    ROUTER: '意图路由',
+    INTENT: '意图识别',
+    RETRIEVAL: '知识检索',
+    TOOL: '工具调用',
+    DECISION: '规则判断',
+    NOTIFY: '发送通知',
+    RESPONSE: '生成结果'
+  }
+  const failed = steps.some(s => s.status === 'FAILED')
+  const stepForPhase = steps.find(s => (typeToPhase[s.type] || s.type) === phase)
+  if (failed) return 'error'
+  if (stepForPhase && stepForPhase.status !== 'SUCCESS' && stepForPhase.type !== 'TOOL') return 'process'
+  if (stepForPhase) return 'success'
+  return phase === steps[steps.length - 1] ? 'process' : 'wait'
+}
+
+function stepTimelineType(step: any): any {
+  if (step.status === 'FAILED' || step.status === 'DENIED') return 'danger'
+  if (step.type === 'TOOL' || step.type === 'RETRIEVAL' || step.type === 'NOTIFY') return 'primary'
+  return 'success'
+}
+
+function stepTagType(step: any): any {
+  if (step.type === 'TOOL') return 'primary'
+  if (step.type === 'RETRIEVAL') return 'primary'
+  if (step.type === 'DECISION') return 'success'
+  if (step.type === 'NOTIFY') return 'warning'
+  return 'info'
+}
+
+function stepStatusType(status: string): any {
+  return status === 'SUCCESS' ? 'success' : status === 'FAILED' || status === 'DENIED' ? 'danger' : 'warning'
 }
 
 function scrollToBottom() {
@@ -277,15 +484,31 @@ function jsonPretty(value: any): string {
 }
 
 .chat-header {
-  padding: 15px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid #eee;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.chat-header h3 {
+.chat-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.chat-title h3 {
   margin: 0;
+}
+
+.chat-subtitle {
+  color: #909399;
+  font-size: 12px;
+}
+
+.chat-header-tags {
+  display: flex;
+  gap: 8px;
 }
 
 .messages-container {
@@ -320,7 +543,7 @@ function jsonPretty(value: any): string {
 }
 
 .message-content {
-  max-width: 70%;
+  max-width: 72%;
   margin: 0 10px;
 }
 
@@ -328,115 +551,171 @@ function jsonPretty(value: any): string {
   text-align: right;
 }
 
+.message-meta {
+  margin-bottom: 6px;
+  display: flex;
+  gap: 6px;
+}
+
 .message-text {
   padding: 12px 16px;
   border-radius: 12px;
   background: #f4f4f5;
   line-height: 1.6;
+  word-break: break-word;
 }
 
 .message.user .message-text {
   background: #409eff;
   color: white;
+  text-align: left;
 }
 
-.message-sources {
+.sources-card {
   margin-top: 10px;
-  padding: 10px;
   background: #f8f9fa;
-  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+}
+
+.sources-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  color: #303133;
+}
+
+.sources-count {
+  font-size: 12px;
+  color: #909399;
+  font-weight: normal;
 }
 
 .source-item {
+  padding: 6px 0;
+  border-bottom: 1px dashed #ebeef5;
+}
+
+.source-item:last-child {
+  border-bottom: none;
+}
+
+.source-line {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 5px 0;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .source-name {
-  flex: 1;
-  font-size: 14px;
+  font-weight: bold;
+  color: #303133;
 }
 
-.source-relevance {
-  color: #666;
+.source-sub {
+  margin-top: 4px;
   font-size: 12px;
+  color: #909399;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.execution-trace {
+.actions-card {
   margin-top: 10px;
-  padding: 10px;
-  background: #f8f9fa;
+  background: #ecf5ff;
+  border: 1px solid #d9ecff;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.actions-title {
+  font-size: 12px;
+  color: #409eff;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.actions-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trace-collapse {
+  margin-top: 10px;
+  border: 1px solid #ebeef5;
   border-radius: 8px;
 }
 
-.execution-trace-summary {
-  cursor: pointer;
-  font-weight: bold;
-  color: #303133;
+.trace-summary {
   display: flex;
   align-items: center;
-  gap: 10px;
-  list-style: none;
-  user-select: none;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.execution-trace-summary::-webkit-details-marker,
-.execution-trace-summary::marker {
-  display: none;
-  content: '';
-}
-
-.execution-trace-summary::before {
-  content: '▶';
-  font-size: 12px;
-  color: #909399;
-}
-
-.execution-trace[open] .execution-trace-summary::before {
-  content: '▼';
-}
-
-.trace-workflow {
-  font-weight: normal;
-  font-size: 12px;
+.trace-icon {
   color: #409eff;
-  background: #ecf5ff;
-  padding: 1px 8px;
-  border-radius: 10px;
+}
+
+.trace-title {
+  font-weight: bold;
+  color: #303133;
 }
 
 .trace-meta {
-  font-weight: normal;
   font-size: 12px;
   color: #909399;
 }
 
-.trace-body {
-  margin-top: 10px;
+.trace-steps {
+  margin: 12px 0;
 }
 
 .trace-section-title {
   font-size: 12px;
   color: #909399;
   font-weight: bold;
-  margin: 6px 0 4px;
+  margin: 10px 0 6px;
 }
 
-.trace-decisions {
+.decision-card {
+  margin-bottom: 8px;
   background: #fff;
-  border: 1px solid #ebeef5;
+}
+
+.decision-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.decision-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
   border-radius: 6px;
   padding: 6px 10px;
-  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.decision-key {
+  color: #909399;
+  font-size: 12px;
+}
+
+.decision-value {
+  color: #303133;
 }
 
 .trace-json {
   margin: 0;
   font-size: 12px;
   color: #606266;
-  background: #fff;
+  background: #fafafa;
   border: 1px solid #ebeef5;
   border-radius: 6px;
   padding: 6px 10px;
@@ -448,23 +727,16 @@ function jsonPretty(value: any): string {
 .step-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .step-name {
   font-weight: bold;
 }
 
-.step-type {
-  font-size: 11px;
-  color: #409eff;
-  background: #ecf5ff;
-  padding: 0 6px;
-  border-radius: 4px;
-}
-
 .step-duration {
-  color: #666;
+  color: #909399;
   font-size: 12px;
 }
 
@@ -474,11 +746,13 @@ function jsonPretty(value: any): string {
   margin-top: 4px;
 }
 
-.step-details {
+.step-details-collapse {
+  margin-top: 6px;
+}
+
+.step-details-title {
   font-size: 12px;
-  color: #409eff;
-  cursor: pointer;
-  margin-top: 4px;
+  color: #606266;
 }
 
 .step-io {
@@ -491,6 +765,7 @@ function jsonPretty(value: any): string {
   padding: 12px 16px;
   background: #f4f4f5;
   border-radius: 12px;
+  width: fit-content;
 }
 
 .typing-indicator span {
@@ -516,6 +791,12 @@ function jsonPretty(value: any): string {
   40% {
     transform: scale(1);
   }
+}
+
+.thinking-text {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 6px;
 }
 
 .input-container {
@@ -572,5 +853,11 @@ function jsonPretty(value: any): string {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sidebar-note .note-text {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.6;
 }
 </style>

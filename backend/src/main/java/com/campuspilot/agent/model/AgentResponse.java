@@ -26,4 +26,7 @@ public class AgentResponse {
 
     /** 附加数据(如创建的任务ID/是否创建成功) */
     private Map<String, Object> data;
+
+    /** 建议下一步行动(由后端确定性生成) */
+    private List<AgentAction> actions;
 }

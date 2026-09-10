@@ -5,6 +5,12 @@ export interface AgentMessage {
   sessionId?: string
 }
 
+export interface AgentAction {
+  type: 'CREATE_TASK' | 'VIEW_POLICY' | 'VIEW_TASKS' | string
+  label: string
+  params?: any
+}
+
 export interface AgentResponse {
   sessionId: string
   messageId: string
@@ -15,6 +21,8 @@ export interface AgentResponse {
   executionSteps: any[]
   toolCalls: any[]
   executionTrace?: any
+  data?: any
+  actions?: AgentAction[]
 }
 
 export function sendMessage(message: AgentMessage) {
