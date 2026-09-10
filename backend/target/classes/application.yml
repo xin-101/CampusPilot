@@ -1,0 +1,57 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/campuspilot?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 30000
+  
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+jwt:
+  secret: ${JWT_SECRET:campuspilot-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256}
+  expiration: 86400000
+
+agent:
+  provider: ${AGENT_PROVIDER:mock}
+  fastgpt:
+    url: ${FASTGPT_URL:http://localhost:3000}
+    apiKey: ${FASTGPT_API_KEY:}
+    knowledgeId: ${FASTGPT_KNOWLEDGE_ID:}
+    workflowId:
+      policyConsultation: ${FASTGPT_WORKFLOW_POLICY:}
+      eligibilityCheck: ${FASTGPT_WORKFLOW_ELIGIBILITY:}
+      taskCreation: ${FASTGPT_WORKFLOW_TASK:}
+    timeout: 30000
+    retryCount: 3
+
+logging:
+  level:
+    root: INFO
+    com.campuspilot: DEBUG
+    org.springframework.security: DEBUG

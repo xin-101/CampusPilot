@@ -1,6 +1,7 @@
 package com.campuspilot.policy;
 
 import com.campuspilot.common.result.ApiResponse;
+import com.campuspilot.dto.PolicySearchRequest;
 import com.campuspilot.vo.PolicyVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

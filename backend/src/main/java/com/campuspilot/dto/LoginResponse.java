@@ -1,5 +1,6 @@
 package com.campuspilot.dto;
 
+import com.campuspilot.vo.UserVO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
