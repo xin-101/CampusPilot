@@ -312,7 +312,18 @@ public class MockAgentProvider implements AgentProvider {
                 || message.contains("可以申请") || message.contains("能申请")
                 || (message.contains("条件") && (message.contains("符合") || message.contains("满足")))) {
             return "ELIGIBILITY_CHECK";
-        } else if (message.contains("帮我") || message.contains("办理") || message.contains("申请")) {
+        }
+        boolean infoLike = message.contains("什么时候") || message.contains("如何")
+                || message.contains("怎么") || message.contains("怎样") || message.contains("多少")
+                || message.contains("多久") || message.contains("什么") || message.contains("条件")
+                || message.contains("标准") || message.contains("流程") || message.contains("材料")
+                || message.contains("时间") || message.contains("在哪") || message.contains("哪里")
+                || message.contains("哪些");
+        boolean explicitAction = message.contains("帮我") || message.contains("请帮我")
+                || message.contains("替我") || message.contains("帮忙") || message.contains("给我办")
+                || message.contains("预约") || message.contains("报名") || message.contains("提交")
+                || message.contains("请办理") || message.contains("帮我办");
+        if (explicitAction || ((message.contains("申请") || message.contains("办理")) && !infoLike)) {
             return "TASK_CREATE";
         } else if (message.contains("成绩") || message.contains("绩点") || message.contains("gpa")) {
             return "SCORE_QUERY";

@@ -19,7 +19,9 @@
 |------|------|------|
 | 2021001 / password | STUDENT | 张三（绩点3.8/排名前10，适合国家奖学金演示） |
 | 2021002 / password | STUDENT | 李四（家庭经济困难，适合励志/助学金演示） |
-| demo_student / password | STUDENT | 标准演示学生账号（新增） |
+| demo_student / password | STUDENT | 标准演示学生账号（计科2101班，见 database/migrations/V002_demo_accounts.sql） |
+| demo_counselor / password | COUNSELOR | 演示辅导员账号（新增） |
+| demo_admin / password | ADMIN | 演示管理端账号（新增） |
 | counselor1 / password | COUNSELOR | 辅导员账号 |
 | admin / password | ADMIN | 管理端账号（不能创建万能Agent） |
 

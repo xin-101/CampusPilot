@@ -401,12 +401,16 @@ INSERT INTO users (id, username, password, role, status) VALUES
 (1, 'admin', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'ADMIN', 'ACTIVE'),
 (2, '2021001', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'STUDENT', 'ACTIVE'),
 (3, '2021002', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'STUDENT', 'ACTIVE'),
-(4, 'counselor1', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'COUNSELOR', 'ACTIVE');
+(4, 'counselor1', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'COUNSELOR', 'ACTIVE'),
+(5, 'demo_student', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'STUDENT', 'ACTIVE'),
+(6, 'demo_counselor', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'COUNSELOR', 'ACTIVE'),
+(7, 'demo_admin', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'ADMIN', 'ACTIVE');
 
 -- Insert demo students (DEMO DATA)
 INSERT INTO students (user_id, student_id, name, grade, major, class_name, enrollment_date, status, phone, email) VALUES
 (2, '2021001', '张三', '2021', '计算机科学与技术', '计科2101班', '2021-09-01', 'ENROLLED', '13800138001', 'zhangsan@example.com'),
-(3, '2021002', '李四', '2021', '软件工程', '软工2101班', '2021-09-01', 'ENROLLED', '13800138002', 'lisi@example.com');
+(3, '2021002', '李四', '2021', '软件工程', '软工2101班', '2021-09-01', 'ENROLLED', '13800138002', 'lisi@example.com'),
+(5, 'D2021001', '演示学生', '2021', '计算机科学与技术', '计科2101班', '2021-09-01', 'ENROLLED', '13800000001', 'demo_student@example.com');
 
 -- Insert demo policies (DEMO DATA)
 INSERT INTO policies (title, category, department, description, keywords, status) VALUES
