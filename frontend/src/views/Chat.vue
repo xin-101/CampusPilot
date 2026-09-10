@@ -26,25 +26,53 @@
                 <span class="source-relevance">相关度: {{ (source.relevance * 100).toFixed(0) }}%</span>
               </div>
             </div>
-            <div v-if="message.executionSteps && message.executionSteps.length > 0" class="execution-trace">
-              <el-divider content-position="left">执行轨迹</el-divider>
-              <el-timeline>
-                <el-timeline-item
-                  v-for="step in message.executionSteps"
-                  :key="step.step"
-                  :type="step.type === 'TOOL' ? 'primary' : 'success'"
-                  :hollow="step.type !== 'TOOL'"
-                >
-                  <div class="step-header">
-                    <span class="step-name">{{ step.name }}</span>
-                    <el-tag size="small" :type="step.status === 'SUCCESS' ? 'success' : 'danger'">
-                      {{ step.status }}
-                    </el-tag>
-                    <span class="step-duration">{{ step.duration }}ms</span>
-                  </div>
-                </el-timeline-item>
-              </el-timeline>
-            </div>
+            <details v-if="message.trace || (message.executionSteps && message.executionSteps.length > 0)" class="execution-trace">
+              <summary class="execution-trace-summary">
+                <span>执行轨迹</span>
+                <span v-if="message.trace && message.trace.workflowName" class="trace-workflow">
+                  {{ message.trace.workflowName }}
+                </span>
+                <span v-if="message.trace && message.trace.retrieval" class="trace-meta">
+                  {{ message.trace.retrieval.provider }} · {{ message.trace.retrieval.documents?.length || 0 }} hits
+                </span>
+                <span v-else class="trace-meta">fallback</span>
+              </summary>
+              <div class="trace-body">
+                <div v-if="message.trace && message.trace.decisions && Object.keys(message.trace.decisions).length" class="trace-decisions">
+                  <div class="trace-section-title">决策信息</div>
+                  <pre class="trace-json">{{ jsonPretty(message.trace.decisions) }}</pre>
+                </div>
+                <el-timeline>
+                  <el-timeline-item
+                    v-for="step in message.executionSteps"
+                    :key="step.step"
+                    :type="step.type === 'TOOL' || step.type === 'RETRIEVAL' ? 'primary' : step.status === 'FAILED' ? 'danger' : 'success'"
+                    :hollow="step.type !== 'TOOL' && step.type !== 'RETRIEVAL'"
+                  >
+                    <div class="step-header">
+                      <span class="step-type">{{ step.type }}</span>
+                      <span class="step-name">{{ step.name }}</span>
+                      <el-tag size="small" :type="step.status === 'SUCCESS' ? 'success' : step.status === 'FAILED' ? 'danger' : 'warning'">
+                        {{ step.status }}
+                      </el-tag>
+                      <span class="step-duration">{{ step.duration }}ms</span>
+                    </div>
+                    <div v-if="step.error" class="step-error">{{ step.error }}</div>
+                    <details v-if="step.input !== undefined || step.output !== undefined" class="step-details">
+                      <summary>输入/输出</summary>
+                      <div v-if="step.input !== undefined" class="step-io">
+                        <span class="trace-section-title">输入</span>
+                        <pre class="trace-json">{{ jsonPretty(step.input) }}</pre>
+                      </div>
+                      <div v-if="step.output !== undefined" class="step-io">
+                        <span class="trace-section-title">输出</span>
+                        <pre class="trace-json">{{ jsonPretty(step.output) }}</pre>
+                      </div>
+                    </details>
+                  </el-timeline-item>
+                </el-timeline>
+              </div>
+            </details>
           </div>
         </div>
         
@@ -126,6 +154,7 @@ interface Message {
   content: string
   sources?: any[]
   executionSteps?: any[]
+  trace?: any
 }
 
 const messages = ref<Message[]>([])
@@ -187,7 +216,8 @@ async function sendMessage() {
       role: 'assistant',
       content: agentResponse.response,
       sources: agentResponse.sources,
-      executionSteps: agentResponse.executionSteps
+      executionSteps: agentResponse.executionSteps,
+      trace: agentResponse.executionTrace
     }
     
     messages.value.push(assistantMessage)
@@ -217,6 +247,14 @@ function formatMessage(content: string): string {
 function scrollToBottom() {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+  }
+}
+
+function jsonPretty(value: any): string {
+  try {
+    return JSON.stringify(value, null, 2)
+  } catch (e) {
+    return String(value)
   }
 }
 </script>
@@ -333,6 +371,80 @@ function scrollToBottom() {
   border-radius: 8px;
 }
 
+.execution-trace-summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #303133;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+  user-select: none;
+}
+
+.execution-trace-summary::-webkit-details-marker,
+.execution-trace-summary::marker {
+  display: none;
+  content: '';
+}
+
+.execution-trace-summary::before {
+  content: '▶';
+  font-size: 12px;
+  color: #909399;
+}
+
+.execution-trace[open] .execution-trace-summary::before {
+  content: '▼';
+}
+
+.trace-workflow {
+  font-weight: normal;
+  font-size: 12px;
+  color: #409eff;
+  background: #ecf5ff;
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+
+.trace-meta {
+  font-weight: normal;
+  font-size: 12px;
+  color: #909399;
+}
+
+.trace-body {
+  margin-top: 10px;
+}
+
+.trace-section-title {
+  font-size: 12px;
+  color: #909399;
+  font-weight: bold;
+  margin: 6px 0 4px;
+}
+
+.trace-decisions {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.trace-json {
+  margin: 0;
+  font-size: 12px;
+  color: #606266;
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  padding: 6px 10px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 .step-header {
   display: flex;
   align-items: center;
@@ -343,9 +455,34 @@ function scrollToBottom() {
   font-weight: bold;
 }
 
+.step-type {
+  font-size: 11px;
+  color: #409eff;
+  background: #ecf5ff;
+  padding: 0 6px;
+  border-radius: 4px;
+}
+
 .step-duration {
   color: #666;
   font-size: 12px;
+}
+
+.step-error {
+  color: #f56c6c;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.step-details {
+  font-size: 12px;
+  color: #409eff;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.step-io {
+  margin-top: 4px;
 }
 
 .typing-indicator {

@@ -14,6 +14,7 @@ export interface AgentResponse {
   sources: any[]
   executionSteps: any[]
   toolCalls: any[]
+  executionTrace?: any
 }
 
 export function sendMessage(message: AgentMessage) {
