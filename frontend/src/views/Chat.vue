@@ -295,6 +295,7 @@ onMounted(async () => {
     recentTasks.value = response.data.slice(0, 5)
   } catch (error) {
     console.error('加载任务失败:', error)
+    ElMessage.info('最近任务加载失败，稍后可刷新查看')
   }
 })
 

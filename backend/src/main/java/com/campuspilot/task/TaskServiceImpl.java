@@ -64,7 +64,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskVO createTask(String title, String description, String deadline, Long policyId) {
         String username = SecurityUtils.getCurrentUsername();
         if (username == null) {
-            throw new RuntimeException("用户未登录");
+            throw new com.campuspilot.common.exception.BusinessException(401, "登录状态已失效，请重新登录。");
         }
         
         User user = userMapper.selectOne(
@@ -74,7 +74,7 @@ public class TaskServiceImpl implements TaskService {
         );
         
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw new com.campuspilot.common.exception.BusinessException(404, "用户不存在");
         }
         
         LocalDateTime deadlineTime = null;

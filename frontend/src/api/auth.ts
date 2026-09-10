@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const api = axios.create({
   baseURL: '/api',
@@ -25,6 +26,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
+      ElMessage.warning('会话已过期，请重新登录')
       window.location.href = '/login'
     }
     return Promise.reject(error)

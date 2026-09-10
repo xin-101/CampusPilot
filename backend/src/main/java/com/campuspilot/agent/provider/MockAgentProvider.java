@@ -38,7 +38,7 @@ public class MockAgentProvider implements AgentProvider {
     @Override
     public AgentResponse chat(AgentRequest request) {
         long startTime = System.currentTimeMillis();
-        log.info("Mock Agent收到消息: {}", request.getMessage());
+        log.info("Mock Agent收到消息: {}, length={}", request.getMessage(), request.getMessage() != null ? request.getMessage().length() : 0);
 
         // 0. 安全守卫：输入校验与恶意注入拦截
         SecurityAssessment assessment = securityGuard.inspect(request.getMessage());
