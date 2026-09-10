@@ -56,6 +56,13 @@ public class EligibilityCheckServiceImpl implements EligibilityCheckService {
                 RetrievedDocument best = docs.get(0);
                 resolvedCategory = best.getCategory();
                 resolvedPolicyId = best.getPolicyId();
+                // 知识库文档(id>=10000)无规则映射：按标题重叠回映射到 DB 政策，保证规则精确命中
+                if (resolvedPolicyId != null && resolvedPolicyId >= 10000L) {
+                    Long dbId = policyService.resolveDbPolicyIdByName(best.getPolicyName(), resolvedCategory);
+                    if (dbId != null) {
+                        resolvedPolicyId = dbId;
+                    }
+                }
                 sources.addAll(docs.stream()
                     .map(RetrievedDocument::getPolicyName)
                     .limit(2)

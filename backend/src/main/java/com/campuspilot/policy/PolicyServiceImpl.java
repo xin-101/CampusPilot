@@ -76,6 +76,45 @@ public class PolicyServiceImpl implements PolicyService {
             .collect(Collectors.toList());
     }
     
+    @Override
+    public Long resolveDbPolicyIdByName(String policyName, String category) {
+        if (policyName == null || policyName.isBlank() || category == null || category.isBlank()) {
+            return null;
+        }
+        Long bestId = null;
+        int bestLen = 0;
+        for (PolicyVO p : getAllPolicies()) {
+            if (!category.equalsIgnoreCase(p.getCategory())) {
+                continue;
+            }
+            String title = p.getTitle() == null ? "" : p.getTitle();
+            int common = longestCommonSubstringLen(title, policyName);
+            if (common > bestLen) {
+                bestLen = common;
+                bestId = p.getId();
+            }
+        }
+        return bestLen >= 6 ? bestId : null;
+    }
+
+    private int longestCommonSubstringLen(String a, String b) {
+        int n = a.length();
+        int m = b.length();
+        int[][] dp = new int[n + 1][m + 1];
+        int max = 0;
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                if (a.charAt(i - 1) == b.charAt(j - 1)) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                    if (dp[i][j] > max) {
+                        max = dp[i][j];
+                    }
+                }
+            }
+        }
+        return max;
+    }
+
     private PolicyVO convertToVO(Policy policy) {
         // 获取当前有效版本（版本管理统一走 PolicyVersionService）
         PolicyVersion currentVersion = policyVersionService.getCurrentVersion(policy.getId());

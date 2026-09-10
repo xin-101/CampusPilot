@@ -5,6 +5,7 @@ import com.campuspilot.agent.model.ToolCall;
 import com.campuspilot.agent.tool.ToolCaller;
 import com.campuspilot.eligibility.EligibilityResult;
 import com.campuspilot.notification.NotificationService;
+import com.campuspilot.policy.PolicyService;
 import com.campuspilot.rag.RAGService;
 import com.campuspilot.rag.RetrievalQuery;
 import com.campuspilot.rag.RetrievalResult;
@@ -33,6 +34,7 @@ public class TaskCreationWorkflow implements AgentWorkflow {
     private final RAGService ragService;
     private final ToolCaller toolCaller;
     private final NotificationService notificationService;
+    private final PolicyService policyService;
 
     @Override
     public String id() {
@@ -153,11 +155,22 @@ public class TaskCreationWorkflow implements AgentWorkflow {
             decision.put("taskCreated", false);
         } else {
             // 4. 创建任务(工具调用 -> Service -> DB)
+            // 知识库文档(id>=10000)不在 policies 表：tasks.policy_id 外键要求 DB 政策，
+            // 通过标题回映射解析 DB 政策ID（未命中则该字段置空）
+            Long dbPolicyId = best.getPolicyId();
+            if (dbPolicyId != null && dbPolicyId >= 10000L) {
+                Long resolved = policyService.resolveDbPolicyIdByName(best.getPolicyName(), best.getCategory());
+                if (resolved != null) {
+                    dbPolicyId = resolved;
+                } else {
+                    dbPolicyId = null;
+                }
+            }
             ToolCall todoCall = toolCaller.execute("create_todo", Map.of(
                 "title", best.getPolicyName() + "申请",
                 "description", "根据" + best.getPolicyName() + "办理申请任务",
                 "deadline", DEMO_DEADLINE,
-                "relatedPolicyId", best.getPolicyId().toString()
+                "relatedPolicyId", dbPolicyId == null ? "" : dbPolicyId.toString()
             ));
             toolCalls.add(todoCall);
             steps.add(ExecutionStep.builder()
