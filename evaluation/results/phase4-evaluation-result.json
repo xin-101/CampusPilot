@@ -3,7 +3,7 @@
     "name": "CampusPilot Phase 4 综合评测 (M1-M6)",
     "date": "2026-09-10",
     "baseUrl": "http://127.0.0.1:8080",
-    "timestamp": "2026-09-10T15-23-02"
+    "timestamp": "2026-09-10T15-49-09"
   },
   "summary": [
     {
@@ -50,9 +50,9 @@
     }
   ],
   "m6Latency": {
-    "p50": 723,
-    "p95": 998,
-    "max": 1031,
+    "p50": 742,
+    "p95": 956,
+    "max": 963,
     "samples": 20,
     "budgetMs": 1500
   },
@@ -275,12 +275,12 @@
       }
     },
     {
-      "name": "p95=998ms (budget<=1500ms)",
+      "name": "p95=956ms (budget<=1500ms)",
       "pass": true,
       "checks": {
-        "p95": 998,
-        "p50": 723,
-        "max": 1031,
+        "p95": 956,
+        "p50": 742,
+        "max": 963,
         "samples": 20
       }
     }

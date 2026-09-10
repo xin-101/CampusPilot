@@ -19,9 +19,9 @@
 
 | 指标 | 值 |
 |------|-----|
-| p50 | 723 ms |
-| p95 | 998 ms |
-| max | 1031 ms |
+| p50 | 742 ms |
+| p95 | 956 ms |
+| max | 963 ms |
 | 采样数 | 20 |
 
 ## 明细
@@ -52,7 +52,7 @@
 | M5-T02 <br><sub>M5 任务执行</sub> | ✅ | taskCreated:PASS; 任务落库+1:PASS (1); title:PASS; policyId:PASS |
 | M5-T03 <br><sub>M5 任务执行</sub> | ✅ | eligible:PASS; status:PASS; 动作 VIEW_POLICY:PASS; 动作 CREATE_TASK:PASS |
 | M5-R01 <br><sub>M5 角色边界</sub> | ✅ | status:PASS; taskCreated:PASS; 未落库:PASS; 不泄露「张三」:PASS; 不泄露「2021001」:PASS; 不泄露「3.8」:PASS |
-| p95=998ms (budget<=1500ms) <br><sub>undefined</sub> | ✅ | p95:998; p50:723; max:1031; samples:20 |
+| p95=956ms (budget<=1500ms) <br><sub>undefined</sub> | ✅ | p95:956; p50:742; max:963; samples:20 |
 
 ## 说明
 
