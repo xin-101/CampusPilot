@@ -5,12 +5,13 @@
 USE campuspilot;
 
 -- Insert demo users
--- Password for all users: password (BCrypt encoded)
+-- Password for all users: password
+-- BCrypt hash: $2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue
 INSERT INTO users (id, username, password, role, status) VALUES
-(1, 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', 'ADMIN', 'ACTIVE'),
-(2, '2021001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', 'STUDENT', 'ACTIVE'),
-(3, '2021002', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', 'STUDENT', 'ACTIVE'),
-(4, 'counselor1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', 'COUNSELOR', 'ACTIVE');
+(1, 'admin', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'ADMIN', 'ACTIVE'),
+(2, '2021001', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'STUDENT', 'ACTIVE'),
+(3, '2021002', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'STUDENT', 'ACTIVE'),
+(4, 'counselor1', '$2a$10$lWIPXrEXsEXF71mAklyFnOFYNcSMEkl3H5qdc8jy4HzuAS4CVU2Ue', 'COUNSELOR', 'ACTIVE');
 
 -- Insert demo students (DEMO DATA)
 INSERT INTO students (user_id, student_id, name, grade, major, class_name, enrollment_date, status, phone, email) VALUES

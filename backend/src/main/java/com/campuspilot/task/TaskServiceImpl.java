@@ -53,8 +53,8 @@ public class TaskServiceImpl implements TaskService {
     
     @Override
     public TaskVO getTaskById(Long id) {
-        Task task = taskMapper.selectById(id);
-        if (task == null || task.getIsDeleted() == 1) {
+        Task task = fetchTaskWithOwnershipCheck(id);
+        if (task == null) {
             return null;
         }
         return convertToVO(task);
@@ -99,8 +99,8 @@ public class TaskServiceImpl implements TaskService {
     
     @Override
     public TaskVO updateTaskStatus(Long id, String status) {
-        Task task = taskMapper.selectById(id);
-        if (task == null || task.getIsDeleted() == 1) {
+        Task task = fetchTaskWithOwnershipCheck(id);
+        if (task == null) {
             return null;
         }
         
@@ -111,6 +111,37 @@ public class TaskServiceImpl implements TaskService {
         
         taskMapper.updateById(task);
         return convertToVO(task);
+    }
+    
+    /**
+     * 查询任务并做数据访问校验：学生只能访问自己的任务，教师/管理员角色拥有完整权限
+     */
+    private Task fetchTaskWithOwnershipCheck(Long id) {
+        Task task = taskMapper.selectById(id);
+        if (task == null || task.getIsDeleted() == 1) {
+            return null;
+        }
+        
+        String role = SecurityUtils.getCurrentRole();
+        if (role == null || role.contains("STUDENT")) {
+            User currentUser = getCurrentUser();
+            if (currentUser == null || !task.getUserId().equals(currentUser.getId())) {
+                return null;
+            }
+        }
+        return task;
+    }
+    
+    private User getCurrentUser() {
+        String username = SecurityUtils.getCurrentUsername();
+        if (username == null) {
+            return null;
+        }
+        return userMapper.selectOne(
+            new LambdaQueryWrapper<User>()
+                .eq(User::getUsername, username)
+                .eq(User::getIsDeleted, 0)
+        );
     }
     
     private TaskVO convertToVO(Task task) {

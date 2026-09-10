@@ -1,6 +1,5 @@
 package com.campuspilot.agent.tool;
 
-import com.campuspilot.security.JwtTokenProvider;
 import com.campuspilot.security.SecurityUtils;
 import com.campuspilot.student.StudentService;
 import com.campuspilot.vo.StudentVO;
@@ -14,7 +13,6 @@ import java.util.Map;
 public class GetStudentInfoTool implements AgentTool {
     
     private final StudentService studentService;
-    private final JwtTokenProvider jwtTokenProvider;
     
     @Override
     public String getName() {
@@ -29,12 +27,11 @@ public class GetStudentInfoTool implements AgentTool {
     @Override
     public ToolResult execute(Map<String, Object> params, String userToken) {
         try {
-            // 获取当前用户信息
-            String username = jwtTokenProvider.getUsernameFromToken(userToken);
-            String role = jwtTokenProvider.getRoleFromToken(userToken);
+            // 当前登录用户角色（来自JWT SecurityContext，Agent无法伪造）
+            String role = SecurityUtils.getCurrentRole();
             
-            // 如果是学生，只能查询自己的信息
-            if ("STUDENT".equals(role)) {
+            // 学生只能查询自己的信息（SecurityContext保证，不接受Agent指定的任意ID）
+            if (role != null && role.contains("STUDENT")) {
                 StudentVO student = studentService.getCurrentStudent();
                 if (student == null) {
                     return ToolResult.error("未找到学生信息", "STUDENT_NOT_FOUND");
@@ -42,10 +39,10 @@ public class GetStudentInfoTool implements AgentTool {
                 return ToolResult.success(student);
             }
             
-            // 如果是管理员或辅导员，可以查询指定学生
+            // 辅导员/管理员可以查询指定学生
             if (params.containsKey("studentId")) {
-                Long studentId = Long.parseLong(params.get("studentId").toString());
-                StudentVO student = studentService.getStudentByUserId(studentId);
+                Long userId = Long.parseLong(params.get("studentId").toString());
+                StudentVO student = studentService.getStudentByUserId(userId);
                 if (student == null) {
                     return ToolResult.error("未找到学生信息", "STUDENT_NOT_FOUND");
                 }

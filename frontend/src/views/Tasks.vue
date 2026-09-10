@@ -9,7 +9,7 @@
     </div>
     
     <div class="tasks-filters">
-      <el-radio-group v-model="statusFilter" @change="filterTasks">
+      <el-radio-group v-model="statusFilter">
         <el-radio-button label="">全部</el-radio-button>
         <el-radio-button label="PENDING">待处理</el-radio-button>
         <el-radio-button label="IN_PROGRESS">进行中</el-radio-button>

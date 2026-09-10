@@ -37,7 +37,7 @@
         </el-form-item>
       </el-form>
       <div class="demo-hint">
-        <p>演示账号：demo / 123456</p>
+        <p>演示账号：2021001 / password</p>
       </div>
     </div>
   </div>
