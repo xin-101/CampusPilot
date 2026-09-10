@@ -33,7 +33,13 @@ public class AgentSecurityGuard {
     );
 
     private static final List<String> OTHER_STUDENT_PATTERNS = List.of(
-        "其他学生", "其他同学", "别人的", "李四", "2021002", "查询张三"
+        "其他学生", "其他同学", "别人的", "李四", "2021001", "2021002", "张三", "王小明",
+        "演示学生", "查询张三", "别人的成绩"
+    );
+
+    private static final List<String> PRIVACY_KEYWORDS = List.of(
+        "成绩", "绩点", "gpa", "信息", "密码", "手机号", "电话", "住址",
+        "银行卡", "身份证", "隐私", "档案", "奖惩", "学籍"
     );
 
     private static final List<String> TOOL_INJECTION_PATTERNS = List.of(
@@ -71,13 +77,15 @@ public class AgentSecurityGuard {
             }
         }
 
-        // 成绩/信息类查询 + 他人学号/姓名 -> 越权访问(最多2次子串检查)
-        if (message.contains("成绩") || message.contains("绩点") || message.contains("信息")) {
-            for (String p : OTHER_STUDENT_PATTERNS) {
-                if (message.contains(p)) {
-                    log.warn("SecurityGuard: other-student identity query detected: {}", p);
-                    return SecurityAssessment.deny("DENIED_UNAUTHORIZED_ACCESS", p,
-                        "出于隐私与数据安全考虑，你只能查询本人的成绩与个人信息。");
+        // 成绩/隐私信息类查询 + 他人学号/姓名 -> 越权访问(最多2次子串检查)
+        for (String pk : PRIVACY_KEYWORDS) {
+            if (message.contains(pk)) {
+                for (String p : OTHER_STUDENT_PATTERNS) {
+                    if (message.contains(p)) {
+                        log.warn("SecurityGuard: other-student identity query detected: {}", p);
+                        return SecurityAssessment.deny("DENIED_UNAUTHORIZED_ACCESS", p,
+                            "出于隐私与数据安全考虑，你只能查询本人的成绩与个人信息。");
+                    }
                 }
             }
         }
