@@ -32,6 +32,12 @@ public class Task {
     
     private LocalDateTime deadline;
     
+    private LocalDateTime dueAt;
+    
+    private LocalDateTime remindAt;
+    
+    private Boolean reminderSent;
+    
     private LocalDateTime completedAt;
     
     @TableField(fill = FieldFill.INSERT)

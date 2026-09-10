@@ -199,6 +199,26 @@ CREATE TABLE tasks (
     FOREIGN KEY (policy_id) REFERENCES policies(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='任务表';
 
+-- Create notifications table (Phase 3)
+CREATE TABLE notifications (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '通知ID',
+    user_id BIGINT NOT NULL COMMENT '接收用户ID',
+    student_id VARCHAR(32) COMMENT '学生学号',
+    type VARCHAR(32) NOT NULL COMMENT '通知类型: TASK/POLICY/SYSTEM/REMINDER',
+    title VARCHAR(255) NOT NULL COMMENT '通知标题',
+    content TEXT COMMENT '通知内容',
+    related_id BIGINT COMMENT '关联业务ID(任务/政策)',
+    is_read TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已读: 0-未读 1-已读',
+    read_at DATETIME COMMENT '已读时间',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    
+    INDEX idx_user_id (user_id),
+    INDEX idx_type (type),
+    INDEX idx_is_read (is_read),
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='通知表';
+
 -- Create task_steps table
 CREATE TABLE task_steps (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '步骤ID',

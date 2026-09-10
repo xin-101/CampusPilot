@@ -199,6 +199,26 @@ CREATE TABLE tasks (
     FOREIGN KEY (policy_id) REFERENCES policies(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='任务表';
 
+-- Create notifications table (Phase 3)
+CREATE TABLE notifications (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '通知ID',
+    user_id BIGINT NOT NULL COMMENT '接收用户ID',
+    student_id VARCHAR(32) COMMENT '学生学号',
+    type VARCHAR(32) NOT NULL COMMENT '通知类型: TASK/POLICY/SYSTEM/REMINDER',
+    title VARCHAR(255) NOT NULL COMMENT '通知标题',
+    content TEXT COMMENT '通知内容',
+    related_id BIGINT COMMENT '关联业务ID(任务/政策)',
+    is_read TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已读: 0-未读 1-已读',
+    read_at DATETIME COMMENT '已读时间',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    
+    INDEX idx_user_id (user_id),
+    INDEX idx_type (type),
+    INDEX idx_is_read (is_read),
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='通知表';
+
 -- Create task_steps table
 CREATE TABLE task_steps (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '步骤ID',
@@ -394,6 +414,7 @@ CREATE TABLE eligibility_rules (
     INDEX idx_enabled (enabled),
     INDEX idx_is_deleted (is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='资格规则表(演示规则)';
+
 -- CampusPilot Demo Data
 -- This file contains demo data for testing
 -- NOTE: All data is marked as DEMO/TEST DATA
@@ -426,13 +447,13 @@ INSERT INTO policies (title, category, department, description, keywords, status
 
 -- Insert policy versions (DEMO DATA)
 INSERT INTO policy_versions (policy_id, version, content, keywords, effective_date, expiry_date, source, status) VALUES
-(1, 'v1', '国家奖学金申请条件：\n1. 具有正式学籍的在校生\n2. 热爱祖国，拥护中国共产党的领导\n3. 遵守宪法和法律，遵守学校规章制度\n4. 诚实守信，道德品质优良\n5. 在校期间学习成绩优异，综合测评成绩排名在本专业前10%\n6. 社会实践、创新能力、综合素质等方面特别突出\n\n申请时间：每年9月1日至9月30日\n\n所需材料：\n1. 国家奖学金申请表\n2. 成绩单（教务处盖章）\n3. 综合测评证明（学院盖章）', '国家奖学金,综合测评,前10%', '2025-01-01', '2025-12-31', '教育部', 'ACTIVE'),
-(2, 'v1', '国家励志奖学金申请条件：\n1. 具有正式学籍的在校生\n2. 热爱祖国，拥护中国共产党的领导\n3. 遵守宪法和法律，遵守学校规章制度\n4. 诚实守信，道德品质优良\n5. 在校期间学习成绩优秀\n6. 家庭经济困难，生活俭朴\n\n申请时间：每年9月1日至9月30日\n\n所需材料：\n1. 国家励志奖学金申请表\n2. 成绩单（教务处盖章）\n3. 家庭经济困难证明', '励志奖学金,家庭经济困难,前10%', '2025-01-01', '2025-12-31', '教育部', 'ACTIVE'),
-(3, 'v1', '国家助学金申请条件：\n1. 具有正式学籍的在校生\n2. 热爱祖国，拥护中国共产党的领导\n3. 遵守宪法和法律，遵守学校规章制度\n4. 诚实守信，道德品质优良\n5. 家庭经济困难，生活俭朴\n\n申请时间：每年9月1日至9月30日\n\n所需材料：\n1. 国家助学金申请表\n2. 家庭经济困难证明', '助学金,家庭经济困难,贫困', '2025-01-01', '2025-12-31', '教育部', 'ACTIVE'),
-(4, 'v1', '学生请假管理办法：\n1. 学生因病或因事不能参加正常教学活动，必须办理请假手续\n2. 请假1天以内，由辅导员批准\n3. 请假1-3天，由学院副书记批准\n4. 请假3天以上，由学院院长批准\n\n所需材料：\n1. 请假条\n2. 相关证明材料（如病假需医院证明）', '请假,审批,病假,事假', '2025-01-01', '2025-12-31', '学生工作处', 'ACTIVE'),
-(5, 'v1', '考试管理办法：\n1. 学生必须携带学生证或身份证参加考试\n2. 考试开始30分钟后不得进入考场\n3. 考试期间不得携带手机等电子设备\n4. 违纪行为将按学校相关规定处理', '考试,考场,违纪', '2025-01-01', '2025-12-31', '教务处', 'ACTIVE'),
-(6, 'v1', '宿舍管理规定：\n1. 晚上11点门禁，超过时间需登记\n2. 禁止使用大功率电器\n3. 保持宿舍卫生整洁\n4. 禁止留宿外来人员', '宿舍,门禁,大功率电器', '2025-01-01', '2025-12-31', '后勤管理处', 'ACTIVE'),
-(7, 'v1', '在读证明办理流程：\n1. 学生本人持学生证到教务处办理\n2. 填写在读证明申请表\n3. 教务处审核后出具证明\n\n所需材料：\n1. 学生证\n2. 在读证明申请表\n3. 一寸照片1张', '在读证明,证明,教务处', '2025-01-01', '2025-12-31', '教务处', 'ACTIVE');
+(1, 'v1', '国家奖学金申请条件：\n1. 具有正式学籍的在校生\n2. 热爱祖国，拥护中国共产党的领导\n3. 遵守宪法和法律，遵守学校规章制度\n4. 诚实守信，道德品质优良\n5. 在校期间学习成绩优异，综合测评成绩排名在本专业前10%\n6. 社会实践、创新能力、综合素质等方面特别突出\n\n申请时间：每年9月1日至9月30日\n\n所需材料：\n1. 国家奖学金申请表\n2. 成绩单（教务处盖章）\n3. 综合测评证明（学院盖章）', '国家奖学金,综合测评,前10%', '2026-01-01', '2026-12-31', '教育部', 'ACTIVE'),
+(2, 'v1', '国家励志奖学金申请条件：\n1. 具有正式学籍的在校生\n2. 热爱祖国，拥护中国共产党的领导\n3. 遵守宪法和法律，遵守学校规章制度\n4. 诚实守信，道德品质优良\n5. 在校期间学习成绩优秀\n6. 家庭经济困难，生活俭朴\n\n申请时间：每年9月1日至9月30日\n\n所需材料：\n1. 国家励志奖学金申请表\n2. 成绩单（教务处盖章）\n3. 家庭经济困难证明', '励志奖学金,家庭经济困难,前10%', '2026-01-01', '2026-12-31', '教育部', 'ACTIVE'),
+(3, 'v1', '国家助学金申请条件：\n1. 具有正式学籍的在校生\n2. 热爱祖国，拥护中国共产党的领导\n3. 遵守宪法和法律，遵守学校规章制度\n4. 诚实守信，道德品质优良\n5. 家庭经济困难，生活俭朴\n\n申请时间：每年9月1日至9月30日\n\n所需材料：\n1. 国家助学金申请表\n2. 家庭经济困难证明', '助学金,家庭经济困难,贫困', '2026-01-01', '2026-12-31', '教育部', 'ACTIVE'),
+(4, 'v1', '学生请假管理办法：\n1. 学生因病或因事不能参加正常教学活动，必须办理请假手续\n2. 请假1天以内，由辅导员批准\n3. 请假1-3天，由学院副书记批准\n4. 请假3天以上，由学院院长批准\n\n所需材料：\n1. 请假条\n2. 相关证明材料（如病假需医院证明）', '请假,审批,病假,事假', '2026-01-01', '2026-12-31', '学生工作处', 'ACTIVE'),
+(5, 'v1', '考试管理办法：\n1. 学生必须携带学生证或身份证参加考试\n2. 考试开始30分钟后不得进入考场\n3. 考试期间不得携带手机等电子设备\n4. 违纪行为将按学校相关规定处理', '考试,考场,违纪', '2026-01-01', '2026-12-31', '教务处', 'ACTIVE'),
+(6, 'v1', '宿舍管理规定：\n1. 晚上11点门禁，超过时间需登记\n2. 禁止使用大功率电器\n3. 保持宿舍卫生整洁\n4. 禁止留宿外来人员', '宿舍,门禁,大功率电器', '2026-01-01', '2026-12-31', '后勤管理处', 'ACTIVE'),
+(7, 'v1', '在读证明办理流程：\n1. 学生本人持学生证到教务处办理\n2. 填写在读证明申请表\n3. 教务处审核后出具证明\n\n所需材料：\n1. 学生证\n2. 在读证明申请表\n3. 一寸照片1张', '在读证明,证明,教务处', '2026-01-01', '2026-12-31', '教务处', 'ACTIVE');
 
 -- Insert policy conditions (DEMO DATA)
 INSERT INTO policy_conditions (policy_version_id, condition_name, condition_type, condition_value, operator, description) VALUES
@@ -453,9 +474,9 @@ INSERT INTO policy_materials (policy_version_id, material_name, material_type, i
 
 -- Insert demo tasks (DEMO DATA)
 INSERT INTO tasks (user_id, policy_id, title, description, status, priority, deadline) VALUES
-(2, 1, '国家奖学金申请', '准备并提交国家奖学金申请材料', 'PENDING', 'HIGH', '2025-09-30 23:59:59'),
-(2, 4, '请假申请', '提交请假申请', 'IN_PROGRESS', 'NORMAL', '2025-10-15 23:59:59'),
-(3, 1, '国家奖学金申请', '准备并提交国家奖学金申请材料', 'PENDING', 'HIGH', '2025-09-30 23:59:59');
+(2, 1, '国家奖学金申请', '准备并提交国家奖学金申请材料', 'PENDING', 'HIGH', '2026-09-30 23:59:59'),
+(2, 4, '请假申请', '提交请假申请', 'IN_PROGRESS', 'NORMAL', '2026-10-15 23:59:59'),
+(3, 1, '国家奖学金申请', '准备并提交国家奖学金申请材料', 'PENDING', 'HIGH', '2026-09-30 23:59:59');
 
 -- Insert task steps (DEMO DATA)
 INSERT INTO task_steps (task_id, step_order, title, description, status) VALUES
