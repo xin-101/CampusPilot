@@ -25,6 +25,15 @@ export interface AgentResponse {
   actions?: AgentAction[]
 }
 
+export interface AgentConfig {
+  provider: string
+  llmEnabled: boolean
+}
+
 export function sendMessage(message: AgentMessage) {
   return api.post('/agent/chat', message)
+}
+
+export function getAgentConfig() {
+  return api.get('/agent/config')
 }

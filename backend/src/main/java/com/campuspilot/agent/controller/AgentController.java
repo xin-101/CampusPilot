@@ -2,6 +2,9 @@ package com.campuspilot.agent.controller;
 
 import com.campuspilot.agent.model.AgentRequest;
 import com.campuspilot.agent.model.AgentResponse;
+import com.campuspilot.agent.provider.AgentProvider;
+import com.campuspilot.agent.provider.MockAgentProvider;
+import com.campuspilot.agent.provider.RealLLMAgentProvider;
 import com.campuspilot.agent.service.AgentService;
 import com.campuspilot.common.result.ApiResponse;
 import com.campuspilot.security.SecurityUtils;
@@ -11,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/agent")
@@ -19,6 +23,22 @@ public class AgentController {
     
     private final AgentService agentService;
     private final StudentService studentService;
+    private final MockAgentProvider mockProvider;
+    private final Optional<RealLLMAgentProvider> llmProvider;
+    
+    /**
+     * 获取 Agent 配置信息（前端据此显示模式指示器）。
+     */
+    @GetMapping("/config")
+    public ApiResponse<Map<String, Object>> getConfig() {
+        boolean llmEnabled = llmProvider.isPresent();
+        String providerName = llmEnabled ? llmProvider.get().getProviderName() : mockProvider.getProviderName();
+        
+        return ApiResponse.success(Map.of(
+            "provider", providerName,
+            "llmEnabled", llmEnabled
+        ));
+    }
     
     @PostMapping("/chat")
     public ApiResponse<AgentResponse> chat(@RequestBody Map<String, String> request) {

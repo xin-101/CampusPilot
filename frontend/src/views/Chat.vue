@@ -8,6 +8,8 @@
         </div>
         <div class="chat-header-tags">
           <el-tag type="warning" size="small" effect="plain">DEMO DATA</el-tag>
+          <el-tag v-if="agentMode.llmEnabled" type="success" size="small" effect="plain">LLM Mode</el-tag>
+          <el-tag v-else type="info" size="small" effect="plain">Mock Mode</el-tag>
           <el-tag type="info" size="small">RAG · RuleEngine · Workflow · Trace</el-tag>
         </div>
       </div>
@@ -246,7 +248,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { sendMessage as sendAgentMessage, type AgentMessage, type AgentResponse, type AgentAction } from '../api/agent'
+import { sendMessage as sendAgentMessage, getAgentConfig, type AgentMessage, type AgentResponse, type AgentAction } from '../api/agent'
 import { getTasks, type Task } from '../api/task'
 import { ElMessage } from 'element-plus'
 
@@ -269,6 +271,7 @@ const loading = ref(false)
 const messagesContainer = ref()
 const recentTasks = ref<Task[]>([])
 const traceDecisionsJson = reactive<Record<string, boolean>>({})
+const agentMode = reactive({ provider: 'Mock', llmEnabled: false })
 
 const quickActions = [
   { icon: '🎓', text: '我能不能申请国家奖学金？' },
@@ -296,6 +299,14 @@ onMounted(async () => {
   } catch (error) {
     console.error('加载任务失败:', error)
     ElMessage.info('最近任务加载失败，稍后可刷新查看')
+  }
+
+  try {
+    const configRes = await getAgentConfig()
+    agentMode.provider = configRes.data.provider
+    agentMode.llmEnabled = configRes.data.llmEnabled
+  } catch (error) {
+    console.warn('Agent配置加载失败，使用默认Mock模式')
   }
 })
 
@@ -337,8 +348,14 @@ async function sendMessage() {
 
     messages.value.push(assistantMessage)
   } catch (error: any) {
-    ElMessage.error('发送消息失败，请稍后重试。')
-    console.error('Agent请求异常:', error)
+    const errorMsg = error?.response?.data?.message || error?.message || '发送消息失败'
+    const assistantMessage: Message = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: `⚠️ **AI 服务暂时不可用**\n\n${errorMsg}\n\n请稍后重试，或点击下方按钮重新发送。`,
+      actions: [{ type: 'RETRY', label: '重新发送', params: { originalMessage: userMessage.content } }]
+    }
+    messages.value.push(assistantMessage)
   } finally {
     loading.value = false
     await nextTick()
@@ -361,6 +378,12 @@ function handleAction(action: AgentAction) {
     router.push({ path: '/policies', query: policyId ? { policyId: String(policyId) } : {} })
   } else if (action.type === 'VIEW_TASKS') {
     router.push('/tasks')
+  } else if (action.type === 'RETRY') {
+    const originalMessage = action.params?.originalMessage
+    if (originalMessage) {
+      inputMessage.value = originalMessage
+      sendMessage()
+    }
   }
 }
 
