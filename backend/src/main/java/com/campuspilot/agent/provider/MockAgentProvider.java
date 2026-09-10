@@ -1,6 +1,8 @@
 package com.campuspilot.agent.provider;
 
 import com.campuspilot.agent.model.*;
+import com.campuspilot.agent.security.AgentSecurityGuard;
+import com.campuspilot.agent.security.SecurityAssessment;
 import com.campuspilot.rag.RetrievalResult;
 import com.campuspilot.workflow.WorkflowContext;
 import com.campuspilot.workflow.WorkflowEngine;
@@ -31,11 +33,20 @@ public class MockAgentProvider implements AgentProvider {
         List.of("POLICY_QUERY", "ELIGIBILITY_CHECK", "TASK_CREATE");
 
     private final WorkflowEngine workflowEngine;
+    private final AgentSecurityGuard securityGuard;
 
     @Override
     public AgentResponse chat(AgentRequest request) {
         long startTime = System.currentTimeMillis();
         log.info("Mock Agent收到消息: {}", request.getMessage());
+
+        // 0. 安全守卫：输入校验与恶意注入拦截
+        SecurityAssessment assessment = securityGuard.inspect(request.getMessage());
+        if (!assessment.isAllowed()) {
+            log.info("Mock Agent安全检查未通过: category={}, pattern={}",
+                assessment.getCategory(), assessment.getMatchedPattern());
+            return securityDeniedResponse(request, assessment, startTime);
+        }
 
         // 模拟网络与LLM推理延迟
         simulateDelay();
@@ -178,6 +189,60 @@ public class MockAgentProvider implements AgentProvider {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    /**
+     * 安全拦截响应：不执行任何工具/工作流，向用户说明被拦截原因(可追踪)。
+     */
+    private AgentResponse securityDeniedResponse(AgentRequest request, SecurityAssessment assessment, long startTime) {
+        long endTime = System.currentTimeMillis();
+        ExecutionStep guardStep = ExecutionStep.builder()
+            .step(1)
+            .type("SECURITY")
+            .name("安全守卫拦截")
+            .status("DENIED")
+            .duration(20)
+            .output(java.util.Map.of(
+                "category", assessment.getCategory(),
+                "matchedPattern", assessment.getMatchedPattern() == null ? "N/A" : assessment.getMatchedPattern()
+            ))
+            .build();
+
+        List<ExecutionStep> steps = List.of(guardStep);
+        ExecutionTrace trace = ExecutionTrace.builder()
+            .executionId(UUID.randomUUID().toString())
+            .sessionId(request.getSessionId())
+            .userId(request.getUserId())
+            .intent("DENIED")
+            .workflow("none")
+            .workflowId("security_guard")
+            .workflowName("安全守卫")
+            .steps(steps)
+            .toolCalls(new ArrayList<>())
+            .citations(new ArrayList<>())
+            .decisions(java.util.Map.of("allowed", false, "category", assessment.getCategory()))
+            .startTime(startTime)
+            .endTime(endTime)
+            .duration(endTime - startTime)
+            .status("DENIED")
+            .error(assessment.getReason())
+            .build();
+
+        String response = "⚠️ **安全防护提示**\n\n" + assessment.getReason()
+            + "\n\n该次请求已由安全守卫拦截，未执行任何工具与数据处理。"
+            + "如需帮助，可以问我：「查询奖学金政策」「帮我判断是否符合国家奖学金条件」「帮我申请奖学金」。";
+
+        return AgentResponse.builder()
+            .sessionId(request.getSessionId())
+            .messageId(UUID.randomUUID().toString())
+            .response(response)
+            .intent("DENIED")
+            .complexity("SIMPLE")
+            .sources(new ArrayList<>())
+            .executionSteps(steps)
+            .toolCalls(new ArrayList<>())
+            .executionTrace(trace)
+            .build();
     }
 
     /**
