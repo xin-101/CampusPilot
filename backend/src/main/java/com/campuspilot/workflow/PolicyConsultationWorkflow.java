@@ -69,9 +69,9 @@ public class PolicyConsultationWorkflow implements AgentWorkflow {
             .status(retrieval.isEmpty() ? "FAILED" : "SUCCESS")
             .duration(System.currentTimeMillis() - t0)
             .output(Map.of(
-                "provider", retrieval.getProvider(),
+                "provider", retrieval.getProvider() == null ? "unknown" : retrieval.getProvider(),
                 "hits", retrieval.getDocuments().size(),
-                "note", retrieval.getNote()
+                "note", retrieval.getNote() == null ? "" : retrieval.getNote()
             ))
             .build());
 

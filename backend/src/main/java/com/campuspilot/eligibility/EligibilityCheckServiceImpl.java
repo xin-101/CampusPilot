@@ -31,12 +31,14 @@ public class EligibilityCheckServiceImpl implements EligibilityCheckService {
     public EligibilityResult check(String policyName, String category, Long policyId) {
         // 1. 政策来源定位(通过RAG检索，保证只使用有效期内政策)
         String resolvedCategory = category;
+        Long resolvedPolicyId = null;
         List<String> sources = new ArrayList<>();
 
         if (policyId != null) {
             PolicyVO policy = policyService.getPolicyById(policyId);
             if (policy != null && "ACTIVE".equals(policy.getStatus())) {
                 resolvedCategory = policy.getCategory();
+                resolvedPolicyId = policy.getId();
                 sources.add(policy.getTitle());
             }
         }
@@ -53,6 +55,7 @@ public class EligibilityCheckServiceImpl implements EligibilityCheckService {
                 List<RetrievedDocument> docs = result.getDocuments();
                 RetrievedDocument best = docs.get(0);
                 resolvedCategory = best.getCategory();
+                resolvedPolicyId = best.getPolicyId();
                 sources.addAll(docs.stream()
                     .map(RetrievedDocument::getPolicyName)
                     .limit(2)
@@ -69,7 +72,7 @@ public class EligibilityCheckServiceImpl implements EligibilityCheckService {
         }
 
         // 3. 规则引擎判断(确定性)
-        EligibilityResult result = ruleEngine.evaluate(student, resolvedCategory);
+        EligibilityResult result = ruleEngine.evaluate(student, resolvedCategory, resolvedPolicyId);
         result.setPolicySources(sources);
         if (sources.isEmpty()) {
             result.setExplanation("未找到相关政策，请确认政策名称或分类是否正确。\n" + result.getExplanation());

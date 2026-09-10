@@ -34,11 +34,28 @@ public class EligibilityRuleEngine {
      * @return 结构化结果
      */
     public EligibilityResult evaluate(StudentProfile student, String category) {
+        return evaluate(student, category, null);
+    }
+
+    /**
+     * 执行资格判断(按来源政策精确取规则)
+     * @param student 学生画像(DEMO)
+     * @param category 政策分类(在 policyId 无法命中时按分类兜底)
+     * @param policyId 已识别的政策ID(source_policy_id 关联规则)
+     * @return 结构化结果
+     */
+    public EligibilityResult evaluate(StudentProfile student, String category, Long policyId) {
         if (student == null) {
             return EligibilityResult.empty();
         }
 
-        List<EligibilityRule> rules = ruleService.getEnabledRulesByCategory(category);
+        List<EligibilityRule> rules = null;
+        if (policyId != null) {
+            rules = ruleService.getEnabledRulesByPolicy(policyId);
+        }
+        if (rules == null || rules.isEmpty()) {
+            rules = ruleService.getEnabledRulesByCategory(category);
+        }
         if (rules.isEmpty()) {
             return EligibilityResult.empty();
         }

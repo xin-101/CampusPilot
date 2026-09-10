@@ -71,10 +71,10 @@ INSERT INTO task_steps (task_id, step_order, title, description, status) VALUES
 (2, 3, '等待审批结果', '等待辅导员审批', 'PENDING');
 
 -- Insert demo notifications (DEMO DATA)
-INSERT INTO notifications (user_id, task_id, title, content, type, is_read) VALUES
-(2, 1, '国家奖学金申请提醒', '国家奖学金申请截止日期为9月30日，请尽快准备材料', 'REMINDER', 0),
-(2, 2, '请假申请状态更新', '你的请假申请已提交给辅导员审批', 'INFO', 1),
-(3, 3, '国家奖学金申请提醒', '国家奖学金申请截止日期为9月30日，请尽快准备材料', 'REMINDER', 0);
+INSERT INTO notifications (user_id, student_id, type, title, content, related_id, is_read) VALUES
+(2, '2021001', 'REMINDER', '国家奖学金申请提醒', '国家奖学金申请截止日期为9月30日，请尽快准备材料', 1, 0),
+(2, '2021001', 'TASK', '请假申请状态更新', '你的请假申请已提交给辅导员审批', 2, 1),
+(3, '2021002', 'REMINDER', '国家奖学金申请提醒', '国家奖学金申请截止日期为9月30日，请尽快准备材料', 3, 0);
 
 -- Insert demo eligibility rules (资格规则引擎 - DEMO_RULE，仅用于演示，非真实校规)
 INSERT INTO eligibility_rules (rule_id, name, category, field_name, operator, expected_value, weight, required, description, enabled, version, source_policy_id, is_demo) VALUES

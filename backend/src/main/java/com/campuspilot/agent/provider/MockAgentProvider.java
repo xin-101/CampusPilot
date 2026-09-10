@@ -180,6 +180,7 @@ public class MockAgentProvider implements AgentProvider {
             .executionSteps(steps)
             .toolCalls(result.getToolCalls())
             .executionTrace(executionTrace)
+            .data(result.getData())
             .build();
     }
 

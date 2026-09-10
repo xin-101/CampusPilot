@@ -267,33 +267,6 @@ CREATE TABLE task_materials (
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='任务材料表';
 
--- Create notifications table
-CREATE TABLE notifications (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '通知ID',
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    task_id BIGINT COMMENT '关联任务ID',
-    title VARCHAR(200) NOT NULL COMMENT '通知标题',
-    content TEXT NOT NULL COMMENT '通知内容',
-    type VARCHAR(20) NOT NULL COMMENT '通知类型: INFO/WARNING/URGENT/REMINDER',
-    is_read TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已读: 0-未读 1-已读',
-    read_at DATETIME COMMENT '阅读时间',
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    created_by BIGINT COMMENT '创建人ID',
-    updated_by BIGINT COMMENT '更新人ID',
-    is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '软删除: 0-未删除 1-已删除',
-    
-    INDEX idx_user_id (user_id),
-    INDEX idx_task_id (task_id),
-    INDEX idx_type (type),
-    INDEX idx_is_read (is_read),
-    INDEX idx_created_at (created_at),
-    INDEX idx_is_deleted (is_deleted),
-    
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='通知表';
-
 -- Create agent_sessions table
 CREATE TABLE agent_sessions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '会话ID',
@@ -488,10 +461,10 @@ INSERT INTO task_steps (task_id, step_order, title, description, status) VALUES
 (2, 3, '等待审批结果', '等待辅导员审批', 'PENDING');
 
 -- Insert demo notifications (DEMO DATA)
-INSERT INTO notifications (user_id, task_id, title, content, type, is_read) VALUES
-(2, 1, '国家奖学金申请提醒', '国家奖学金申请截止日期为9月30日，请尽快准备材料', 'REMINDER', 0),
-(2, 2, '请假申请状态更新', '你的请假申请已提交给辅导员审批', 'INFO', 1),
-(3, 3, '国家奖学金申请提醒', '国家奖学金申请截止日期为9月30日，请尽快准备材料', 'REMINDER', 0);
+INSERT INTO notifications (user_id, student_id, type, title, content, related_id, is_read) VALUES
+(2, '2021001', 'REMINDER', '国家奖学金申请提醒', '国家奖学金申请截止日期为9月30日，请尽快准备材料', 1, 0),
+(2, '2021001', 'TASK', '请假申请状态更新', '你的请假申请已提交给辅导员审批', 2, 1),
+(3, '2021002', 'REMINDER', '国家奖学金申请提醒', '国家奖学金申请截止日期为9月30日，请尽快准备材料', 3, 0);
 
 -- Insert demo eligibility rules (资格规则引擎 - DEMO_RULE，仅用于演示，非真实校规)
 INSERT INTO eligibility_rules (rule_id, name, category, field_name, operator, expected_value, weight, required, description, enabled, version, source_policy_id, is_demo) VALUES

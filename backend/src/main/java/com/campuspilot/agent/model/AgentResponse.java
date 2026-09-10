@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -22,4 +23,7 @@ public class AgentResponse {
     private List<ExecutionStep> executionSteps;
     private List<ToolCall> toolCalls;
     private ExecutionTrace executionTrace;
+
+    /** 附加数据(如创建的任务ID/是否创建成功) */
+    private Map<String, Object> data;
 }
