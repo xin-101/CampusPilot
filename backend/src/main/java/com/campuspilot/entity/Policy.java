@@ -26,6 +26,8 @@ public class Policy {
     
     private String description;
     
+    private String keywords;
+    
     private String status;
     
     @TableField(fill = FieldFill.INSERT)

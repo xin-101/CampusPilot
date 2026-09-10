@@ -12,7 +12,6 @@ import com.campuspilot.vo.PolicyVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +23,7 @@ public class PolicyServiceImpl implements PolicyService {
     private final PolicyMapper policyMapper;
     private final PolicyVersionMapper versionMapper;
     private final PolicyConditionMapper conditionMapper;
+    private final PolicyVersionService policyVersionService;
     
     @Override
     public List<PolicyVO> getAllPolicies() {
@@ -77,8 +77,8 @@ public class PolicyServiceImpl implements PolicyService {
     }
     
     private PolicyVO convertToVO(Policy policy) {
-        // 获取当前有效版本
-        PolicyVersion currentVersion = getCurrentVersion(policy.getId());
+        // 获取当前有效版本（版本管理统一走 PolicyVersionService）
+        PolicyVersion currentVersion = policyVersionService.getCurrentVersion(policy.getId());
         
         List<PolicyConditionVO> conditions = new ArrayList<>();
         if (currentVersion != null) {
@@ -101,20 +101,6 @@ public class PolicyServiceImpl implements PolicyService {
             .source(currentVersion != null ? currentVersion.getSource() : null)
             .conditions(conditions)
             .build();
-    }
-    
-    private PolicyVersion getCurrentVersion(Long policyId) {
-        return versionMapper.selectOne(
-            new LambdaQueryWrapper<PolicyVersion>()
-                .eq(PolicyVersion::getPolicyId, policyId)
-                .eq(PolicyVersion::getStatus, "ACTIVE")
-                .le(PolicyVersion::getEffectiveDate, LocalDate.now())
-                .and(w -> w.isNull(PolicyVersion::getExpiryDate)
-                    .or()
-                    .ge(PolicyVersion::getExpiryDate, LocalDate.now()))
-                .orderByDesc(PolicyVersion::getVersion)
-                .last("LIMIT 1")
-        );
     }
     
     private List<PolicyConditionVO> getConditions(Long policyVersionId) {

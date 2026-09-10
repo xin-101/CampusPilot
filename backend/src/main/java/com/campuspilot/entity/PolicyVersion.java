@@ -25,6 +25,8 @@ public class PolicyVersion {
     
     private String content;
     
+    private String keywords;
+    
     private LocalDate effectiveDate;
     
     private LocalDate expiryDate;
