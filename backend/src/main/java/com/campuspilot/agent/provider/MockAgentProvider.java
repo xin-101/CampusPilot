@@ -303,14 +303,19 @@ public class MockAgentProvider implements AgentProvider {
     }
 
     /**
-     * 意图识别（优先级：资格判断 > 任务创建 > 成绩 > 政策 > 通用）
-     * 资格类：判断/资格/是否符合 + 能不能/能否/可否/可以申请/能申请（询问资格，非办理）
+     * 意图识别（优先级：资格判断 > 任务创建 > 成绩 > 通知 > 任务查询 > 政策 > 通用）
+     * 资格类：显式判断/资格行为 + "能不能/能否/可否/可以申请/能申请"
+     * 排除纯政策询问："申请条件"/"满足什么条件" 等只问规则不问自身资格
      */
     private String mockIntentDetection(String message) {
-        if (message.contains("判断") || message.contains("资格") || message.contains("是否符合")
+        boolean explicitEligibilityAction =
+                message.contains("判断") || message.contains("资格") || message.contains("是否符合")
                 || message.contains("能不能") || message.contains("能否") || message.contains("可否")
-                || message.contains("可以申请") || message.contains("能申请")
-                || (message.contains("条件") && (message.contains("符合") || message.contains("满足")))) {
+                || message.contains("可以申请") || message.contains("能申请");
+        boolean asksOwnCondition =
+                message.contains("符合条件") || message.contains("满足条件") || message.contains("达到条件")
+                || message.contains("达标条件");
+        if (explicitEligibilityAction || asksOwnCondition) {
             return "ELIGIBILITY_CHECK";
         }
         boolean infoLike = message.contains("什么时候") || message.contains("如何")
@@ -318,7 +323,7 @@ public class MockAgentProvider implements AgentProvider {
                 || message.contains("多久") || message.contains("什么") || message.contains("条件")
                 || message.contains("标准") || message.contains("流程") || message.contains("材料")
                 || message.contains("时间") || message.contains("在哪") || message.contains("哪里")
-                || message.contains("哪些");
+                || message.contains("哪些") || message.contains("怎么办") || message.contains("有哪些");
         boolean explicitAction = message.contains("帮我") || message.contains("请帮我")
                 || message.contains("替我") || message.contains("帮忙") || message.contains("给我办")
                 || message.contains("预约") || message.contains("报名") || message.contains("提交")
@@ -327,6 +332,12 @@ public class MockAgentProvider implements AgentProvider {
             return "TASK_CREATE";
         } else if (message.contains("成绩") || message.contains("绩点") || message.contains("gpa")) {
             return "SCORE_QUERY";
+        } else if (message.contains("通知") || message.contains("消息") || message.contains("提醒")
+                || message.contains("未读") || message.contains("待办通知")) {
+            return "NOTIFICATION_QUERY";
+        } else if (message.contains("我的任务") || message.contains("待办") || message.contains("任务列表")
+                || message.contains("任务状态") || message.contains("办理进度")) {
+            return "TASK_QUERY";
         } else if (message.contains("请假") || message.contains("宿舍") || message.contains("寝室")
                 || message.contains("住宿") || message.contains("奖") || message.contains("助")
                 || message.contains("金") || message.contains("补助") || message.contains("资助")
@@ -368,13 +379,30 @@ public class MockAgentProvider implements AgentProvider {
                     + "**总学分**：120\n"
                     + "**绩点**：3.8\n"
                     + "**排名**：15/150（前10%）";
+            case "TASK_QUERY":
+                return "📋 **任务查询（DEMO数据）**\n\n"
+                    + "你可以通过「任务管理」页面查看所有待办任务。\n\n"
+                    + "或直接输入以下操作：\n"
+                    + "- 「帮我申请奖学金」— 创建新的申请任务\n"
+                    + "- 「查看我的任务」— 跳转任务列表\n\n"
+                    + "如需帮助，请告诉我你想办理的具体事务。";
+            case "NOTIFICATION_QUERY":
+                return "🔔 **通知查询**\n\n"
+                    + "你可以通过顶部导航栏的通知图标查看未读通知。\n\n"
+                    + "我会在以下场景主动通知你：\n"
+                    + "- ✅ 新任务创建\n"
+                    + "- ⏰ 任务截止提醒\n"
+                    + "- 📢 系统公告\n\n"
+                    + "通知会自动推送，无需手动刷新。";
             default:
                 return "你好！我是CampusPilot校园事务智能助手。\n\n"
                     + "我可以帮你：\n"
                     + "- 📚 查询校园政策（如：查询奖学金政策）\n"
                     + "- 🎓 判断申请资格（如：帮我判断是否符合国家奖学金申请条件）\n"
                     + "- 📝 办理校园事务（如：帮我申请奖学金）\n"
-                    + "- 📊 查询成绩（如：查看我的成绩）\n\n"
+                    + "- 📊 查询成绩（如：查看我的成绩）\n"
+                    + "- 🔔 查看通知（如：查看我的待办通知）\n"
+                    + "- 📋 管理任务（如：查看我的待办任务）\n\n"
                     + "请问有什么可以帮你的？";
         }
     }
