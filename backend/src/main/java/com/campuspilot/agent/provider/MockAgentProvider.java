@@ -314,10 +314,14 @@ public class MockAgentProvider implements AgentProvider {
             return "ELIGIBILITY_CHECK";
         } else if (message.contains("帮我") || message.contains("办理") || message.contains("申请")) {
             return "TASK_CREATE";
-        } else if (message.contains("成绩") || message.contains("绩点")) {
+        } else if (message.contains("成绩") || message.contains("绩点") || message.contains("gpa")) {
             return "SCORE_QUERY";
-        } else if (message.contains("请假") || message.contains("宿舍") || message.contains("奖")
-                || message.contains("助") || message.contains("金") || message.contains("在读证明")
+        } else if (message.contains("请假") || message.contains("宿舍") || message.contains("寝室")
+                || message.contains("住宿") || message.contains("奖") || message.contains("助")
+                || message.contains("金") || message.contains("补助") || message.contains("资助")
+                || message.contains("贷款") || message.contains("在读证明") || message.contains("学生证")
+                || message.contains("综合测评") || message.contains("测评") || message.contains("四六级")
+                || message.contains("离校") || message.contains("勤工") || message.contains("学分")
                 || message.contains("政策") || message.contains("考试")) {
             return "POLICY_QUERY";
         }

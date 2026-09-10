@@ -1,0 +1,230 @@
+{
+  "runAt": "2026-09-10T13:04:43.752Z",
+  "baseUrl": "http://127.0.0.1:8080",
+  "provider": "LOCAL_VECTOR_TFIDF",
+  "summary": [
+    {
+      "group": "hit-rate",
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "rate": 100
+    },
+    {
+      "group": "topk",
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "rate": 100
+    },
+    {
+      "group": "coverage",
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "rate": 100
+    },
+    {
+      "group": "expired-filter",
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "rate": 100
+    },
+    {
+      "group": "wrong-policy-exclusion",
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "rate": 100
+    },
+    {
+      "group": "no-result",
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "rate": 100
+    },
+    {
+      "group": "ALL",
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "rate": 100
+    }
+  ],
+  "result": "PASSED",
+  "cases": [
+    {
+      "id": "RAG-001",
+      "group": "hit-rate",
+      "query": "国家奖学金奖励标准是多少钱",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "top1Contains": "PASS",
+        "hitExpectedIds": "PASS"
+      }
+    },
+    {
+      "id": "RAG-002",
+      "group": "hit-rate",
+      "query": "国家助学金可以每月发多少",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "top1Contains": "PASS",
+        "hitExpectedIds": "PASS"
+      }
+    },
+    {
+      "id": "RAG-003",
+      "group": "hit-rate",
+      "query": "学生寝室晚上几点关门",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "top1Contains": "PASS",
+        "hitExpectedIds": "PASS"
+      }
+    },
+    {
+      "id": "RAG-004",
+      "group": "hit-rate",
+      "query": "请假超过三天谁来审批",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "top1Contains": "PASS",
+        "hitExpectedIds": "PASS"
+      }
+    },
+    {
+      "id": "RAG-005",
+      "group": "hit-rate",
+      "query": "在读证明在哪里办理",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "top1Contains": "PASS",
+        "hitExpectedIds": "PASS"
+      }
+    },
+    {
+      "id": "RAG-006",
+      "group": "hit-rate",
+      "query": "课程考试作弊怎么处理",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "top1Contains": "PASS",
+        "hitExpectedIds": "PASS"
+      }
+    },
+    {
+      "id": "RAG-007",
+      "group": "topk",
+      "query": "奖学金",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "topK<=1": "PASS",
+        "minResults": "PASS",
+        "top1Contains": "PASS"
+      }
+    },
+    {
+      "id": "RAG-008",
+      "group": "topk",
+      "query": "助学金",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "topK<=3": "PASS",
+        "minResults": "PASS",
+        "maxResults": "PASS"
+      }
+    },
+    {
+      "id": "RAG-009",
+      "group": "coverage",
+      "query": "国家奖学金申请条件和奖励标准",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "sourcesNotEmpty": "PASS",
+        "hitExpectedIds": "PASS"
+      }
+    },
+    {
+      "id": "RAG-010",
+      "group": "coverage",
+      "query": "学生综合素质测评哪个维度占比最高",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "sourcesNotEmpty": "PASS",
+        "hitCategory": "PASS"
+      }
+    },
+    {
+      "id": "RAG-011",
+      "group": "expired-filter",
+      "query": "国家奖学金旧版管理办法前15%",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "hitExpectedIds": "PASS",
+        "noExpiredDoc": "PASS"
+      }
+    },
+    {
+      "id": "RAG-012",
+      "group": "expired-filter",
+      "query": "国家奖学金怎么办",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "noExpiredId": "PASS"
+      }
+    },
+    {
+      "id": "RAG-013",
+      "group": "wrong-policy-exclusion",
+      "query": "助学金申请流程",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "excludeCategory": "PASS"
+      }
+    },
+    {
+      "id": "RAG-014",
+      "group": "wrong-policy-exclusion",
+      "query": "宿舍大功率电器",
+      "pass": true,
+      "checks": {
+        "docsNotEmpty": "PASS",
+        "excludeCategory": "PASS"
+      }
+    },
+    {
+      "id": "RAG-015",
+      "group": "no-result",
+      "query": "量子力学课程注册费是多少",
+      "pass": true,
+      "checks": {
+        "graceful": "PASS"
+      }
+    },
+    {
+      "id": "RAG-016",
+      "group": "no-result",
+      "query": "龙舟社团报名时间",
+      "pass": true,
+      "checks": {
+        "graceful": "PASS"
+      }
+    }
+  ]
+}

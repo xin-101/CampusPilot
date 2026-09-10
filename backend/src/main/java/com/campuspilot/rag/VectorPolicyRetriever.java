@@ -131,9 +131,11 @@ public class VectorPolicyRetriever implements PolicyRetriever {
         List<ScoredDocument> candidates = vectorStore.search(queryVector, preK, filters);
 
         // 3. 重排序与过滤
+        double minKeepScore = 0.05;
         List<Map.Entry<RetrievedDocument, Double>> ranked = new ArrayList<>();
         int totalCandidates = vectorStore.size();
         int filteredExpired = 0;
+        int filteredLowScore = 0;
 
         Set<String> seen = new HashSet<>();
         for (ScoredDocument scored : candidates) {
@@ -149,6 +151,10 @@ public class VectorPolicyRetriever implements PolicyRetriever {
 
             // 权限过滤：仅允许公开分类给任意角色（演示版简化：全部可见）
             double finalScore = 0.75 * scored.getScore() + 0.25 * keywordBoost(query, doc);
+            if (finalScore < minKeepScore) {
+                filteredLowScore++;
+                continue;
+            }
 
             // 汇总同一政策的多个 chunk，取最高分
             if (seen.contains(policyIdStr)) {
@@ -190,7 +196,7 @@ public class VectorPolicyRetriever implements PolicyRetriever {
             .collect(Collectors.toList());
 
         String note = providerName() + ": 匹配 " + top.size() + "/" + totalCandidates
-            + " 条候选，过滤过期/未生效 " + filteredExpired + " 条";
+            + " 条候选，过滤过期/未生效 " + filteredExpired + " 条，低相关过滤 " + filteredLowScore + " 条";
         log.info("VectorPolicyRetriever: query={}, topK={}, result={}, candidates={}",
             query.getQuery(), query.getTopK(), top.size(), candidates.size());
 

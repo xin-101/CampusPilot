@@ -1,0 +1,121 @@
+[
+  {
+    "id": "RAG-001",
+    "group": "hit-rate",
+    "query": "国家奖学金奖励标准是多少钱",
+    "expectedPolicyIds": [1],
+    "expectedTop1Contains": "国家奖学金",
+    "category": "SCHOLARSHIP"
+  },
+  {
+    "id": "RAG-002",
+    "group": "hit-rate",
+    "query": "国家助学金可以每月发多少",
+    "expectedPolicyIds": [3],
+    "expectedTop1Contains": "助学金",
+    "category": "AID"
+  },
+  {
+    "id": "RAG-003",
+    "group": "hit-rate",
+    "query": "学生寝室晚上几点关门",
+    "expectedPolicyIds": [6],
+    "expectedTop1Contains": "宿舍",
+    "category": "DORMITORY"
+  },
+  {
+    "id": "RAG-004",
+    "group": "hit-rate",
+    "query": "请假超过三天谁来审批",
+    "expectedPolicyIds": [4],
+    "expectedTop1Contains": "请假",
+    "category": "LEAVE"
+  },
+  {
+    "id": "RAG-005",
+    "group": "hit-rate",
+    "query": "在读证明在哪里办理",
+    "expectedPolicyIds": [7],
+    "expectedTop1Contains": "在读证明",
+    "category": "CERTIFICATE"
+  },
+  {
+    "id": "RAG-006",
+    "group": "hit-rate",
+    "query": "课程考试作弊怎么处理",
+    "expectedPolicyIds": [5],
+    "expectedTop1Contains": "考试",
+    "category": "EXAMINATION"
+  },
+  {
+    "id": "RAG-007",
+    "group": "topk",
+    "query": "奖学金",
+    "topK": 1,
+    "expectedMinResults": 1,
+    "expectedTop1Contains": "奖学金"
+  },
+  {
+    "id": "RAG-008",
+    "group": "topk",
+    "query": "助学金",
+    "topK": 3,
+    "expectedMaxResults": 3,
+    "expectedMinResults": 1
+  },
+  {
+    "id": "RAG-009",
+    "group": "coverage",
+    "query": "国家奖学金申请条件和奖励标准",
+    "expectedCitationsNonEmpty": true,
+    "expectedPolicyIds": [1]
+  },
+  {
+    "id": "RAG-010",
+    "group": "coverage",
+    "query": "学生综合素质测评哪个维度占比最高",
+    "expectedCitationsNonEmpty": true,
+    "expectedCategory": "EVALUATION"
+  },
+  {
+    "id": "RAG-011",
+    "group": "expired-filter",
+    "query": "国家奖学金旧版管理办法前15%",
+    "expectedNotInclude": "旧版",
+    "expectedPolicyIds": [1],
+    "note": "2025旧版已过期，不应作为有效引用返回"
+  },
+  {
+    "id": "RAG-012",
+    "group": "expired-filter",
+    "query": "国家奖学金怎么办",
+    "expectedNotInIds": [10000],
+    "note": "知识库旧版(expiry 2025)应被有效性过滤"
+  },
+  {
+    "id": "RAG-013",
+    "group": "wrong-policy-exclusion",
+    "query": "助学金申请流程",
+    "expectedExcludeCategory": "DORMITORY",
+    "expectedNotExact": "宿舍"
+  },
+  {
+    "id": "RAG-014",
+    "group": "wrong-policy-exclusion",
+    "query": "宿舍大功率电器",
+    "expectedExcludeCategory": "SCHOLARSHIP"
+  },
+  {
+    "id": "RAG-015",
+    "group": "no-result",
+    "query": "量子力学课程注册费是多少",
+    "expectedGraceful": true,
+    "note": "超纲查询应返回无结果友好提示而非报错"
+  },
+  {
+    "id": "RAG-016",
+    "group": "no-result",
+    "query": "龙舟社团报名时间",
+    "expectedGraceful": true
+  }
+]
