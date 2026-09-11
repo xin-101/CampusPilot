@@ -16,7 +16,7 @@
 # 1. 准备 MySQL（Docker 或已有实例均可）并确保 3306 可连
 docker compose up -d mysql
 
-# 2. 启动后端（本地 mvn，日志写入 backend/startup.log）
+# 2. 启动后端（本地 mvn，日志写入 campuspilot/startup.log）
 .\scripts\start-dev.ps1
 
 # 3. 健康检查
@@ -33,4 +33,4 @@ docker compose up -d mysql
 
 - 演示账号：`demo_student` / `demo_counselor` / `demo_admin` / `2021001`（张三）/ `2021002`（李四），密码均为 `password`（见 `database/migrations/V002_demo_accounts.sql`）。
 - 所有评测为真实 HTTP 调用，结果写入 `evaluation/results/`。
-- 前端开发模式：`cd frontend && npm run dev`（默认 5173，代理 `/api` 到 8080）。
+- 前端开发模式：`cd campuspilot-web && npm run dev`（默认 5173，代理 `/api` 到 8080）。

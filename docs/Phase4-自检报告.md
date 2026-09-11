@@ -27,7 +27,7 @@ Phase 4「比赛实战化与 Demo 强化」：在 Phase 3 基础上完成
 | Phase4 M1–M6 综合评测 | 25/25 | `evaluation/phase4/run-phase4-eval.mjs` |
 | RAG 检索评测 | 16/16 (100%) | `evaluation/rag/run-rag-eval.mjs` |
 | Demo 自动化冒烟 | 10/10 | `scripts/demo-smoke.mjs` |
-| 前端构建 | ✅ | `frontend/dist` |
+| 前端构建 | ✅ | `campuspilot-web/dist` |
 
 ### 2.1 Phase4 六类指标（M1–M6）
 | # | 指标 | 说明 | 结果 |
@@ -71,7 +71,7 @@ Phase 4「比赛实战化与 Demo 强化」：在 Phase 3 基础上完成
 - `database/migrations/V002_demo_accounts.sql`（demo_student/counselor/admin）
 - `scripts/{check-dev,start-dev,run-demo,run-evaluation}` + `demo-smoke.mjs` + `scripts/README.md`
 - `docs/23–26`（FastGPT 联调清单、比赛 Demo 脚本、创新点、答辩 Q&A）
-- 构建：`frontend/dist`（Vue3 管理台+聊天面板）
+- 构建：`campuspilot-web/dist`（Vue3 管理台+聊天面板）
 
 ## 六、后续待办
 

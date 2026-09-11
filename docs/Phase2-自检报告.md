@@ -88,7 +88,7 @@
 |---|------|
 | 后端编译 | `mvn compile` 通过（EXIT 0）|
 | 前端类型检查+构建 | `npm run build`（vue-tsc + vite）通过 |
-| Git提交 | 完成并清理了误提交的`backend/target/`构建产物 |
+| Git提交 | 完成并清理了误提交的`campuspilot/target/`构建产物 |
 
 ## 三、模块完成清单
 

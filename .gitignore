@@ -8,11 +8,11 @@
 Thumbs.db
 
 # Maven
-backend/target/
+campuspilot/target/
 
 # Frontend
-frontend/node_modules/
-frontend/dist/
+campuspilot-web/node_modules/
+campuspilot-web/dist/
 
 # Environment variables
 .env
@@ -23,6 +23,6 @@ frontend/dist/
 *.log
 
 # Test reports
-backend/target/surefire-reports/
+campuspilot/target/surefire-reports/
 # Local docker test override
 docker-compose.override.local.yml

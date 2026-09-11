@@ -23,7 +23,7 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ./campuspilot
       dockerfile: Dockerfile
     container_name: campuspilot-backend
     ports:
@@ -58,7 +58,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./campuspilot-web
       dockerfile: Dockerfile
     container_name: campuspilot-frontend
     ports:

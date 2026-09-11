@@ -6,7 +6,7 @@ Phase 3 将"路由 + 步骤编排 + 工具调用 + 决策 + 引用 + 轨迹"落�
 替代 Phase 2 的 Mock 响应。同一执行过程同时产出用户回答与结构化 `ExecutionTrace`，
 供前端 Trace 面板与评测使用。
 
-## 二、核心组件（backend/src/main/java/com/campuspilot/workflow/）
+## 二、核心组件（campuspilot/src/main/java/com/campuspilot/workflow/）
 
 | 类型 | 说明 |
 |------|------|

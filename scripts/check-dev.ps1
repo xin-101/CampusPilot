@@ -35,7 +35,7 @@ if ($health -and $health.data) {
 }
 
 # 3. 前端
-$dist = Join-Path $repoRoot 'frontend\dist'
+$dist = Join-Path $repoRoot 'campuspilot-web\dist'
 CheckStep 'Frontend-dist' (Test-Path (Join-Path $dist 'index.html')) $dist
 
 # 4. 评测脚本

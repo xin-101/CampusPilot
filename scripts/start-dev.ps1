@@ -7,7 +7,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$backend = Join-Path $repoRoot 'backend'
+$backend = Join-Path $repoRoot 'campuspilot'
 $logFile = Join-Path $backend 'startup.log'
 
 # 1. MySQL
@@ -46,16 +46,16 @@ while ((Get-Date) -lt $deadline) {
   Start-Sleep -Seconds 3
 }
 if ($up) {
-  Write-Output '>> 后端已就绪 http://127.0.0.1:8080 (log: backend/startup.log)'
+  Write-Output '>> 后端已就绪 http://127.0.0.1:8080 (log: campuspilot/startup.log)'
 } else {
-  Write-Output '!! 后端未就绪，请查看 backend/startup.log'
+  Write-Output '!! 后端未就绪，请查看 campuspilot/startup.log'
   if (Test-Path $logFile) { Get-Content $logFile -Tail 30 }
 }
 
 # 3. 前端 dev（可选）
 if ($Frontend) {
-  $fe = Join-Path $repoRoot 'frontend'
+  $fe = Join-Path $repoRoot 'campuspilot-web'
   Write-Output '>> 启动前端 dev server (http://localhost:5173) ...'
   Start-Process -FilePath 'cmd.exe' -ArgumentList "/c", "cd /d $fe && npm run dev" -WindowStyle Hidden
 }
-Write-Output '提示：前端推荐用 npm run dev（README 见 frontend/README.md），浏览器默认代理 /api 到 8080。'
+Write-Output '提示：前端推荐用 npm run dev（README 见 campuspilot-web/README.md），浏览器默认代理 /api 到 8080。'

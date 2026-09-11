@@ -28,7 +28,7 @@ Phase 5「比赛准备与最终打磨」：在 Phase 4 全量通过基础上完�
 | RAG 检索评测 | 16/16 (100%) | `evaluation/rag/run-rag-eval.mjs` |
 | Demo 自动化冒烟 | 10/10 通过 | `scripts/demo-smoke.mjs` |
 | 32-case 全量评测 | 32/32 PASS | `evaluation/cases.json`（18 PASSED_3_9 + 14 PASSED_5_9） |
-| 前端构建 | ✅ | `frontend/dist` |
+| 前端构建 | ✅ | `campuspilot-web/dist` |
 
 ### 2.1 32-case 评测明细
 
@@ -189,8 +189,8 @@ CampusPilot Agent（唯一核心，无外部Agent依赖）
 | 文件 | 说明 |
 |------|------|
 | docker-compose.yml | 三服务（MySQL + Backend + Frontend） |
-| backend/Dockerfile + docker/settings.xml | Aliyun 镜像加速 |
-| frontend/Dockerfile + .npmrc | npmmirror 加速 |
+| campuspilot/Dockerfile + docker/settings.xml | Aliyun 镜像加速 |
+| campuspilot-web/Dockerfile + .npmrc | npmmirror 加速 |
 | scripts/ | 一键启动/Demo冒烟/评测运行/环境检查 |
 | database/init.sql | 完整 schema + demo 数据（SET NAMES utf8mb4） |
 

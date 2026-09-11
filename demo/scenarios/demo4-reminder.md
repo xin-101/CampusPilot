@@ -36,4 +36,4 @@ SELECT COUNT(*) FROM notifications WHERE type='REMINDER' AND related_id=<taskId>
 
 ## 注意
 - Demo 数据因 reminder_sent 幂等只发一次；复现需重新 `UPDATE ... reminder_sent=0`。
-- 调度日志见 `backend/startup.log`（ReminderScheduler 行）。
+- 调度日志见 `campuspilot/startup.log`（ReminderScheduler 行）。

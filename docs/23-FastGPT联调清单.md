@@ -5,7 +5,7 @@
 
 ## 1. 配置项
 
-`backend/src/main/resources/application-prod.yml`（或环境变量）：
+`campuspilot/src/main/resources/application-prod.yml`（或环境变量）：
 
 | 配置 | 环境变量 | 说明 |
 |------|----------|------|

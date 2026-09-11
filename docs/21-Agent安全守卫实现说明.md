@@ -2,7 +2,7 @@
 
 ## 一、概述
 
-`AgentSecurityGuard`（backend/src/main/java/com/campuspilot/agent/security/）在
+`AgentSecurityGuard`（campuspilot/src/main/java/com/campuspilot/agent/security/）在
 `MockAgentProvider.chat` 进入意图识别与任何工具调用**之前**对用户消息执行校验与恶意注入检测。
 命中即返回 `DENIED` 响应：不执行任何工作流/工具/数据处理，拦截原因写入 Trace。
 

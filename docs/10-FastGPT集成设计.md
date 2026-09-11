@@ -1325,7 +1325,7 @@ mvn spring-boot:run
 # docker-compose.yml
 services:
   backend:
-    build: ./backend
+    build: ./campuspilot
     environment:
       - AGENT_PROVIDER=fastgpt
       - FASTGPT_URL=http://fastgpt:3000
